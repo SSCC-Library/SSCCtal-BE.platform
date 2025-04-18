@@ -6,11 +6,15 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import user as models
 from schemas import user as schemas
+from routers.websocket_handler import router as websocket_router
 
 # 앱 실행 시 테이블 자동 생성
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+#WebSocket 핸들러(router)를 FastAPI 애플리케이션에 등록
+app.include_router(websocket_router)    #/ws/video_feed (ESP32용) 및 /ws/video (브라우저용) 경로에서 웹소켓 통신 처리
 
 # DB 세션 의존성 함수 (요청마다 DB 세션 생성 -> 자동 닫힘)
 def get_db():

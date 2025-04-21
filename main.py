@@ -2,6 +2,7 @@
 FastAPI 엔드포인트 정의
 """
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import user as models
@@ -12,6 +13,17 @@ from routers.websocket_handler import router as websocket_router
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# 허용할 origin 리스트
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #WebSocket 핸들러(router)를 FastAPI 애플리케이션에 등록
 app.include_router(websocket_router)    #/ws/video_feed (ESP32용) 및 /ws/video (브라우저용) 경로에서 웹소켓 통신 처리

@@ -37,9 +37,9 @@ def get_db():
         db.close()
 
 # 학번을 통해 사용자 정보를 조회하는 API
-@app.post("/user/by-school-number", response_model=schemas.UserResponse)
+@app.post("/user/by-student-id", response_model=schemas.UserResponse)
 def get_user_by_schoolnumber(request: schemas.SchoolNumberRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.school_number == request.school_number).first()    # DB에서 학번 기준으로 사용자 조회
+    user = db.query(models.User).filter(models.User.student_id == request.student_id).first()    # DB에서 학번 기준으로 사용자 조회
     if not user:
         raise HTTPException(status_code=404, detail="User not found")    # 사용자 없을 경우 404 에러 반환
     return user    # 조회된 사용자 정보 반환

@@ -10,12 +10,10 @@ import httpx
 
 router = APIRouter()
 
-
 # 로그인 요청 스키마
 class LoginRequest(BaseModel):
     student_id: int
     password: str
-
 
 # 로그인 응답 스키마
 class LoginResponse(BaseModel):
@@ -25,16 +23,12 @@ class LoginResponse(BaseModel):
     school_id: int = None
     token: str = None
 
-
-# saint 실서비스 인증 (httpx 비동기 호출)
-async def saint_auth(student_id: int, password: str) -> bool:
-    url = "https://smartid.ssu.ac.kr/smln_pcs.asp"
+# Saint 인증 함수
+async def saint_auth(student_id: int, password: str) -> str:
+    url = "https://smartid.ssu.ac.kr/Symtra_sso/smln_pcs.asp"
     headers = {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,/;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "Referer": "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https%3A%2F%2Fsaint.ssu.ac.kr%2FwebSSO%2Fsso.jsp",
-    "Origin": "https://smartid.ssu.ac.kr/",
+        "User-Agent": "",
+        "Referer": "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https%3A%2F%2Fsaint.ssu.ac.kr%2FwebSSO%2Fsso.jsp",
     }
     data = {
         "in_tp_bit": "0",
@@ -44,19 +38,28 @@ async def saint_auth(student_id: int, password: str) -> bool:
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, data=data, headers=headers)
-        return "parent.location.href" in response.text
+        response = await client.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        s_token = response.cookies.get("sToken") # sToken 쿠키 뽑기
+        return s_token
 
 
 # 로그인 엔드포인트
-@router.post("/login", response_model=LoginResponse)
+@router.post("/api/v0/login", response_model=LoginResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-    if not await saint_auth(data.student_id, data.password):
-        raise HTTPException(status_code=400, detail="saint 로그인 실패")
+    s_token = await saint_auth(data.student_id, data.password)
+    if not s_token:
+        return LoginResponse(
+            success=False,
+            code=400
+        )
 
     user = db.query(User).filter(User.student_id == data.student_id).first()
     if not user:
-        raise HTTPException(status_code=401, detail="사용자 미등록")
+        return LoginResponse(
+            success=False,
+            code=401
+        )
 
     return LoginResponse(
         success=True,
@@ -68,6 +71,9 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
 
 
 # 로그아웃 엔드포인트
-@router.post("/logout")
+@router.post("/api/v0/logout")
 def logout():
-    return {"success": True, "message": "로그아웃 완료"}
+    return {
+        "success": True,
+        "code": 200
+    }

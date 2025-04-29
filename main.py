@@ -9,6 +9,7 @@ from models import user as models
 from schemas import user as schemas
 from routers.websocket_handler import router as websocket_router
 from routers.auth import router as auth_router
+from routers.manual_input import router as manul_input_router
 
 # 앱 실행 시 테이블 자동 생성
 models.Base.metadata.create_all(bind=engine)
@@ -31,3 +32,5 @@ app.include_router(websocket_router)    #/ws/video_feed (ESP32용) 및 /ws/video
 
 # 인증 라우터를 FastAPI 애플리케이션에 등록
 app.include_router(auth_router)
+
+app.include_router(manul_input_router)

@@ -15,7 +15,6 @@ def manual_input(request: ManualInputRequest, db: Session = Depends(get_db)):
             success=False,
             code=404
         )
-        #raise HTTPException(status_code=404, detail="Item not found")
 
     return ItemResponse(
         success=True,
@@ -23,5 +22,5 @@ def manual_input(request: ManualInputRequest, db: Session = Depends(get_db)):
         item_id=db_item.id,
         title=db_item.name,
         status=db_item.is_available,
-        img="https://image.yes24.com/goods/118982111/XL"
+        img=db_item.img
     )

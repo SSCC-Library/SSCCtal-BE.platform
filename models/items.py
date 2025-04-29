@@ -22,3 +22,4 @@ class Item(Base):
     isbn = Column(String(20), nullable=True, comment="책일 경우 ISBN")
     is_available = Column(Enum(ItemAvailability), nullable=False, comment="물품 상태")
     hashtag = Column(String(255), nullable=True, comment="물품 해시태그")
+    img = Column(String(512), nullable=True, comment="물품 이미지 URL")

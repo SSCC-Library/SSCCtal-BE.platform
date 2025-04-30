@@ -20,7 +20,7 @@ class LoginResponse(BaseModel):
     success: bool
     code: int
     name: str = None
-    school_id: int = None
+    student_id: int = None
     token: str = None
 
 # Saint 인증 함수
@@ -65,7 +65,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         success=True,
         code=200,
         name=user.name,
-        school_id=user.student_id,
+        student_id=user.student_id,
         token="jwt-token-placeholder",  # JWT 연동 전까지는 placeholder
     )
 

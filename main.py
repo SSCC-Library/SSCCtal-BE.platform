@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine, get_db
 from models import user as models
 from schemas import user as schemas
-from routers.websocket_handler import router as websocket_router
+from routers.stream_router import router as stream_router
 from routers.auth import router as auth_router
 from routers.manual_input import router as manual_input_router
 from routers.rental import router as rental_router
@@ -29,11 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# WebSocket 핸들러 등록 (/ws/video_feed, /ws/video)
-app.include_router(websocket_router)
-
 # 인증 라우터 등록
 app.include_router(auth_router)
+
+# WebSocket 핸들러 등록 (/ws/video_feed, /ws/video)
+app.include_router(stream_router)
 
 # 수동 입력(manual input) 라우터 등록
 app.include_router(manual_input_router)

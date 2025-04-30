@@ -14,7 +14,7 @@ class ManualInputRequest(BaseModel):
 class ItemResponse(BaseModel):
     success: bool
     code: int
-    item_id: str = None
+    item_id: int = None
     title: str = None
     status: ItemAvailability = None
     img: str = None

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime
 
 class ReturnRequest(BaseModel):
@@ -9,3 +10,4 @@ class ReturnRequest(BaseModel):
 class ReturnResponse(BaseModel):
     success: bool
     code: int
+    overdue: Optional[int] = None

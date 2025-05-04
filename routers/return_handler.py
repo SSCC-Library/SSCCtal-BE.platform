@@ -36,5 +36,6 @@ def return_item(request: ReturnRequest, db: Session = Depends(get_db)):
     return ReturnResponse(
         success=True,
         code=200,
+        rental_date= rental.rental_date,
         overdue=rental.overdue
     )

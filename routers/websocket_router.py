@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-import asyncio
+from services.barcode_recognizer import recognize_barcodes
 
 router = APIRouter()
 
@@ -17,14 +17,27 @@ async def esp32_stream(websocket: WebSocket):
             if msg.get("type") == "websocket.receive":
                 if msg.get("bytes") is not None:
                     frame = msg["bytes"]
-                    # 영상 시청자들에게 브로드캐스트
+
+                    # 바코드/QR 인식
+                    recognized, _ = recognize_barcodes(frame, draw_rect=False)
+                    for r in recognized:
+                        print(f"\n✅ [인식됨] {r['type']}: {r['data']} 위치={r['rect']}")
+                    
+                    # 인식 결과가 있으면 스트리밍 정지 신호 전송
+                    if recognized and esp32_ws:
+                        print("❗ 바코드 인식됨 → ESP32에 스트리밍 정지 신호 전송")
+                        await esp32_ws.send_text("stop")
+                        # (선택) 이후 break로 연결 종료 또는 적절히 관리
+                        # break
+
+                    # 시청자에게 브로드캐스트
                     for viewer in list(viewer_clients):
                         try:
                             await viewer.send_bytes(frame)
                         except Exception as e:
                             viewer_clients.discard(viewer)
                 elif msg.get("text") is not None:
-                    pass # 필요시 로그
+                    pass
     except Exception as e:
         esp32_ws = None
 

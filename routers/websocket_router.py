@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from database import SessionLocal  # 실제 세션 생성 함수 import
-from models.items import Item      # 실제 모델 import
+from models.item import Item      # 실제 모델 import
 from schemas.item import ItemResponse  # 실제 pydantic 스키마 import
 from services.barcode_recognizer import recognize_barcodes
 import json

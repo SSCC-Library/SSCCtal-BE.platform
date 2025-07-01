@@ -3,6 +3,18 @@ Pydantic 요청/응답 스키마 정의
 """
 from pydantic import BaseModel
 
+class UserBase(BaseModel):
+    student_id: int
+    email: str
+    name: str
+    major: str
+
+class UserRead(UserBase):
+    id: int
+    class Config:
+        orm_mode = True
+
+
 # 클라이언트가 학번으로 사용자 조회 요청 시 사용하는 요청 스키마
 class SchoolNumberRequest(BaseModel):
     student_id: int

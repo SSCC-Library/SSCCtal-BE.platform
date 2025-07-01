@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from models.rentals import Rental
-from models.items import Item
+from models.rental import Rental
+from models.item import Item
 from schemas.return_schema import ReturnRequest, ReturnResponse
 
 router = APIRouter()

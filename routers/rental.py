@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from schemas.rental import RentalRequest, RentalResponse
-from models.rentals import Rental
-from models.items import Item
+from models.rental import Rental
+from models.item import Item
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ def rental_item(request: RentalRequest, db: Session = Depends(get_db)):
     
     if item.is_available != "available":
         return RentalResponse(
-            success=False,
+               success=False,
             code=409
         )
     

@@ -13,6 +13,9 @@ from routers.manual_input import router as manual_input_router
 from routers.rental import router as rental_router
 from routers.return_handler import router as return_router
 from routers.websocket_router import router as websocket_router
+from api.user import router as user_router
+from api.item import router as item_router
+from api.rental import router as rental_router
 
 # 앱 실행 시 테이블 자동 생성
 models.Base.metadata.create_all(bind=engine)
@@ -47,3 +50,7 @@ app.include_router(return_router)
 
 # 웹소켓 라우터 등록
 app.include_router(websocket_router)
+
+app.include_router(user_router)
+app.include_router(item_router)
+app.include_router(rental_router)

@@ -1,20 +1,36 @@
 from enum import Enum
 from pydantic import BaseModel
+from typing import Optional
 
-class ItemAvailability(str, Enum):
+class ItemTypeEnum(str, Enum):
+    book = "book"
+    daily_item = "daily_item"
+
+class IsAvailableEnum(str, Enum):
     available = "available"
     rented = "rented"
     not_for_rent = "not_for_rent"
     lost = "lost"
     under_repair = "under_repair"
 
-class ManualInputRequest(BaseModel):
-    isbn: str
+class ItemRead(BaseModel):
+    id: int
+    item_type: ItemTypeEnum
+    name: str
+    isbn: Optional[str] = None
+    is_available: IsAvailableEnum
+    hashtag: Optional[str] = None
+    img: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 class ItemResponse(BaseModel):
     success: bool
     code: int
-    item_id: int = None
-    title: str = None
-    status: ItemAvailability = None
-    img: str = None
+    item_id: Optional[int] = None
+    title: Optional[str] = None
+    status: Optional[IsAvailableEnum] = None
+    img: Optional[str] = None
+class ManualInputRequest(BaseModel):
+    isbn: str

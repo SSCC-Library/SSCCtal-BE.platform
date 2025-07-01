@@ -4,7 +4,7 @@ from database import Base
 class Rental(Base):
     __tablename__ = "rentals"
 
-    id = Column(Integer, primary_key=True, index=True, comment="대여 고유 관리 번호")
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True, comment="대여 고유 관리 번호")
     student_id = Column(Integer, nullable=False, comment="대여자 학번")
     item_id = Column(Integer, ForeignKey("items.id"), nullable=False, comment="아이템 고유번호")
     rental_date = Column(DateTime, nullable=False, comment="대여일")

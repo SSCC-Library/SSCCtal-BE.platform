@@ -27,6 +27,12 @@ def rental_item(request: RentalRequest, db: Session = Depends(get_db)):
             code=404
         )
     
+    if item.is_available != "available":
+        return RentalResponse(
+            success=False,
+            code=409
+        )
+    
     item.is_available = "rented"
 
     db.commit()

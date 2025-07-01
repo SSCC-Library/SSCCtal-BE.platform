@@ -10,4 +10,5 @@ class ReturnRequest(BaseModel):
 class ReturnResponse(BaseModel):
     success: bool
     code: int
+    rental_date: datetime = None
     overdue: Optional[int] = None

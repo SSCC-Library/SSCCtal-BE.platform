@@ -1,15 +1,15 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
-from datetime import datetime, date
-from models.user import UserClassificationEnum,UserStatusEnum
-from dependencies import DeletionStatusEnum
+from typing import Optional
+from datetime import datetime
+from models.user import UserClassificationEnum,UserStatusEnum,GenderEnum
+
 
 class UserBase(BaseModel):
     student_id: int
     name: str
     email: EmailStr
     phone_number: Optional[str] = None
-    gender: Optional[str] = None
+    gender: Optional[GenderEnum] = GenderEnum.MALE
     major: Optional[str] = None
     major2: Optional[str] = None
     minor: Optional[str] = None
@@ -20,15 +20,15 @@ class UserCreate(UserBase):
     pass
 
 class UserUpdate(UserBase):
-    updated_at: datetime
+    update_date: datetime
 
     model_config = {
         "from_attributes": True
     }
 
 class User(UserBase):
-    joined_at: datetime
-    updated_at: datetime
+    join_date: datetime
+    update_date: datetime
 
     model_config = {
         "from_attributes": True

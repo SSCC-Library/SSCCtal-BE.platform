@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from dependencies import DeletionStatusEnum
 from typing import Optional
 
 class LoginRequest(BaseModel):

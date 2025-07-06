@@ -1,55 +1,81 @@
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Enum as SQLEnum
-from sqlalchemy.orm import relationship, declarative_base
-from datetime import datetime, timedelta
+from sqlalchemy import Column, Integer, String, DateTime, Date, Enum as SQLEnum
+from sqlalchemy.orm import relationship
 from enum import Enum
 from database import Base
 from dependencies import korea_time, DeletionStatusEnum
 
-class Item_typeEnum(str, Enum) :
-    BOOK = "book"   #책
-    ITEM = "item"   #물품
-
+class ItemTypeEnum(str, Enum):
+    BOOK = "book"         # 책
+    EQUIPMENT = "equipment"   # 물품
 
 class Item(Base):
-    __tablename__ = "items"  # 아이템(책, 장비 등) 테이블
+    __tablename__ = "items"
 
-    item_id = Column(Integer, primary_key=True, index=True)  # 아이템 ID
-    item_isbn = Column(String(100), unique=True,nullable=False)  # ISBN 또는 고유 코드(같은 책일 시 같은 isbn)
-    name = Column(String(20), nullable=False)  # 아이템 이름 (최대 20자)
-    type = Column(SQLEnum(Item_typeEnum), nullable=False,default=Item_typeEnum.BOOK)  # 아이템 종류 (예: book, item 등 Enum)
-    publisher = Column(String(20))  # 출판사 (또는 제조사)
-    publish_date = Column(Date)  # 출판일 또는 출시일
-    hashtag = Column(String(100))  # 해시태그 또는 키워드 검색용
-    image_url = Column(String(100))  # 썸네일 이미지 URL
-    total_count = Column(Integer, default=0)  # 등록된 복사본 총 수
-    available_count = Column(Integer, default=0)  # 현재 대출 가능한 수량
-    created_at = Column(DateTime, default=korea_time)  # 등록 시각
-    updated_at = Column(DateTime, default=korea_time, onupdate=korea_time)  # 수정 시각
-    delete_status = Column(SQLEnum(DeletionStatusEnum),nullable=False, default=DeletionStatusEnum.ACTIVE)
+    item_id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        comment="아이템 고유 ID"
+    )
+    identifier_code = Column(
+        String(100),
+        unique=True,
+        nullable=False,
+        comment="ISBN 또는 고유 코드 (같은 책일 경우 동일한 코드 사용)"
+    )
+    name = Column(
+        String(50),
+        nullable=False,
+        comment="아이템 이름 (최대 50자)"
+    )
+    type = Column(
+        SQLEnum(ItemTypeEnum),
+        nullable=False,
+        default=ItemTypeEnum.BOOK,
+        comment="아이템 종류 (book 또는 equipment)"
+    )
+    publisher = Column(
+        String(50),
+        comment="출판사 또는 제조사"
+    )
+    publish_date = Column(
+        Date,
+        comment="출판일 또는 출시일"
+    )
+    hashtag = Column(
+        String(100),
+        comment="해시태그 또는 키워드 검색용"
+    )
+    image_url = Column(
+        String(100),
+        comment="썸네일 이미지 URL"
+    )
+    total_count = Column(
+        Integer,
+        default=0,
+        comment="등록된 복사본 총 수"
+    )
+    available_count = Column(
+        Integer,
+        default=0,
+        comment="현재 대출 가능한 수량"
+    )
+    create_date = Column(
+        DateTime,
+        default=korea_time,
+        comment="등록 시각"
+    )
+    update_date = Column(
+        DateTime,
+        default=korea_time,
+        onupdate=korea_time,
+        comment="수정 시각"
+    )
+    delete_status = Column(
+        SQLEnum(DeletionStatusEnum),
+        nullable=False,
+        default=DeletionStatusEnum.ACTIVE,
+        comment="삭제 상태 플래그"
+    )
 
-    copies = relationship("ItemCopy", back_populates="item")  # 복사본들과의 관계 (1:N)
-
-
-class Copy_StatusEnum(str, Enum):
-    AVAILABLE = "available"         # 대출 가능
-    BORROWED = "borrowed"           # 대여 중
-    LOST = "lost"                   # 분실
-    DAMAGED = "damaged"             # 손상됨
-    UNDER_REPAIR = "under_repair"   # 수리 중
-
-
-class ItemCopy(Base):
-    __tablename__ = "item_copy"  # 복사본 테이블 (실물 단위)
-
-    copy_id = Column(Integer, primary_key=True, index=True)  # 복사본 고유 ID
-    item_id = Column(Integer, ForeignKey("items.item_id"), nullable=False)  # 연결된 아이템의 ID
-    identifier_code = Column(String(100), nullable=False, unique=True)  # 실물 식별 코드 (예: 바코드, RFID)
-    copy_status = Column(SQLEnum(Copy_StatusEnum), nullable=False, default=Copy_StatusEnum.AVAILABLE)
-    # 복사본의 상태 (대출 가능, 분실 등)
-
-    created_at = Column(DateTime, default=korea_time)  # 생성 시각
-    updated_at = Column(DateTime, default=korea_time, onupdate=korea_time)  # 수정 시각
-    delete_status = Column(SQLEnum(DeletionStatusEnum),nullable=False, default=DeletionStatusEnum.ACTIVE)
-
-    item = relationship("Item", back_populates="copies")  # 원본 아이템과의 관계
-    rentals = relationship("Rental", back_populates="item_copy")  # 대출 기록과의 관계
+    copies = relationship("ItemCopy", back_populates="item")

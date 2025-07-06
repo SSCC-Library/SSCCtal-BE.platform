@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from database import get_db
 from models.user import User
 from schemas.login import LoginRequest, LoginResponse
@@ -25,13 +24,15 @@ async def saint_auth(student_id: int, password: str) -> str:
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers, data=data)
         response.raise_for_status()
-        s_token = response.cookies.get("sToken") # sToken 쿠키 뽑기
+        s_token = response.cookies.get("sToken") # sToken 쿠키 
+
         return s_token
 
 
-@router.post("/api/v0/login", response_model=LoginResponse)
+@router.post("/api/v1/login", response_model=LoginResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     s_token = await saint_auth(data.student_id, data.password)
+    print(s_token)
     if not s_token:
         return LoginResponse(
             success=False,
@@ -39,7 +40,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         )
 
     user = db.query(User).filter(User.student_id == data.student_id).first()
-    print(user)
+
     if not user:
         return LoginResponse(
             success=False,
@@ -55,7 +56,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.post("/api/v0/logout")
+@router.post("/api/v1/logout")
 def logout():
     return {
         "success": True,

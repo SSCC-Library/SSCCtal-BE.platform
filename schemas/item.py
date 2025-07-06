@@ -1,13 +1,12 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime, date
-from models.item import Item_typeEnum, Copy_StatusEnum
-from dependencies import DeletionStatusEnum
+from models.item import ItemTypeEnum
 
 class ItemBase(BaseModel):
-    item_isbn: str
+    identifier_code: str
     name: str
-    type: Item_typeEnum
+    type: ItemTypeEnum
     publisher: Optional[str] = None
     publish_date: Optional[date] = None
     hashtag: Optional[str] = None
@@ -21,31 +20,10 @@ class ItemCreate(ItemBase):
 
 class Item(ItemBase):
     item_id: int
-    created_at: datetime
-    updated_at: datetime
+    create_date: datetime
+    update_date: datetime
 
     model_config = {
         "from_attributes": True
     }
 
-
-
-class ItemCopyBase(BaseModel):
-    item_id: int
-    identifier_code: str
-    copy_status: Optional[Copy_StatusEnum] = Copy_StatusEnum.AVAILABLE
-
-
-class ItemCopyCreate(ItemCopyBase):
-    pass
-
-class ItemCopyUpdate(ItemCopyBase) :
-    pass
-class ItemCopySchemas(ItemCopyBase):
-    copy_id: int
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = {
-        "from_attributes": True
-    }

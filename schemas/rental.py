@@ -1,13 +1,12 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional
 from datetime import datetime, date
-from dependencies import DeletionStatusEnum
 from models.rental import RentalStatusEnum
 
 class RentalBase(BaseModel):
     student_id: int
     copy_id: int
-    copy_status: Optional[RentalStatusEnum] = RentalStatusEnum.BORROWED
+    rental_status: Optional[RentalStatusEnum] = RentalStatusEnum.BORROWED
     #rental_classification: Optional[str]
     item_borrow_date: Optional[datetime]
     expectation_return_date: Optional[date]
@@ -21,15 +20,15 @@ class RentalCreate(BaseModel):
 
 
 class Rental(RentalBase):
-    created_at: datetime
-    updated_at: datetime
+    create_date: datetime
+    update_date: datetime
 
     model_config = {
         "from_attributes": True
     }
 
 class RentalUpdate(RentalBase):
-    updated_at: datetime
+    update_date: datetime
 
     model_config = {
         "from_attributes": True

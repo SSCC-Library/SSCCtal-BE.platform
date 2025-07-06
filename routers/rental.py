@@ -5,9 +5,10 @@ from typing import List, Optional
 from datetime import datetime
 from database import get_db
 from models.rental import Rental, RentalStatusEnum
-from models.item import ItemCopy, Copy_StatusEnum
-from schemas.rental import RentalBase, RentalCreate, RentalUpdate
+from models.item_copy import ItemCopy, CopyStatusEnum
+from schemas.rental import RentalBase, RentalUpdate
 from dependencies import DeletionStatusEnum, korea_time, seven_days_later
+
 
 router = APIRouter(prefix="/rentals", tags=["rentals"])
 
@@ -19,7 +20,7 @@ class RentalRequest(BaseModel):
 
 
 # 전체 대여 내역 조회 (필터 포함)
-@router.get("/v0/list", response_model=List[RentalBase])
+@router.get("/v1/list", response_model=List[RentalBase])
 def list_rentals(
     student_id: Optional[int] = None,
     status: Optional[RentalStatusEnum] = None,
@@ -45,7 +46,7 @@ def list_rentals(
 
 
 #  단일 대여 조회
-@router.get("/v0/{rental_id}", response_model=RentalBase)
+@router.get("/v1/{rental_id}", response_model=RentalBase)
 def get_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     if not rental:
@@ -54,7 +55,7 @@ def get_rental(rental_id: int, db: Session = Depends(get_db)):
 
 
 #  대여 생성
-@router.post("/v0/add", response_model=RentalBase)
+@router.post("/v1/add", response_model=RentalBase)
 def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(
         ItemCopy.copy_id == data.copy_id,
@@ -64,17 +65,17 @@ def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
     if not copy:
         raise HTTPException(status_code=404, detail="해당 복사본이 존재하지 않습니다.")
     
-    if copy.copy_status != Copy_StatusEnum.AVAILABLE:
+    if copy.copy_status != CopyStatusEnum.AVAILABLE:
         raise HTTPException(status_code=400, detail="복사본이 대여 불가능한 상태입니다.")
 
     # 복사본 상태를 대여중으로 업데이트
-    copy.copy_status = Copy_StatusEnum.BORROWED
+    copy.copy_status = CopyStatusEnum.BORROWED
 
     # Rental 생성
     rental = Rental(
         student_id=data.student_id,
         copy_id=data.copy_id,
-        copy_status=RentalStatusEnum.BORROWED,
+        rental_status=RentalStatusEnum.BORROWED,
         item_borrow_date=korea_time(),
         expectation_return_date=seven_days_later(),
         overdue=0
@@ -88,8 +89,8 @@ def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
 
 
 #  대여 정보 수정 (간단한 필드만 예시로 수정)
-@router.post("/v0/{rental_id}/edit", response_model=RentalBase)
-def update_rental(rental_id: int, data: RentalUpdate, db: Session = Depends(get_db)):
+@router.post("/v1/{rental_id}/edit", response_model=RentalBase)
+def update_rental(rental_id: int, data: RentalBase, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     if not rental:
         raise HTTPException(status_code=404, detail="대여 기록이 없습니다.")
@@ -103,7 +104,7 @@ def update_rental(rental_id: int, data: RentalUpdate, db: Session = Depends(get_
 
 
 # 대여 삭제 (soft delete)
-@router.post("/v0/{rental_id}")
+@router.post("/v1/{rental_id}")
 def delete_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(
         Rental.rental_id == rental_id,
@@ -119,7 +120,7 @@ def delete_rental(rental_id: int, db: Session = Depends(get_db)):
 
 
 # 대여 반납 처리
-@router.post("/v0/{rental_id}/return", response_model=RentalUpdate)
+@router.post("/v1/{rental_id}/return", response_model=RentalUpdate)
 def return_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(
         Rental.rental_id == rental_id,
@@ -136,9 +137,10 @@ def return_rental(rental_id: int, db: Session = Depends(get_db)):
     if not copy:
         raise HTTPException(status_code=404, detail="연결된 복사본을 찾을 수 없습니다.")
 
-    copy.copy_status = Copy_StatusEnum.AVAILABLE
+    copy.copy_status = CopyStatusEnum.AVAILABLE
     rental.item_return_date = datetime.now()
-    rental.copy_status=RentalStatusEnum.RETURNED
+    rental.rental_status=RentalStatusEnum.RETURNED
+    rental.update_date=korea_time()
     db.commit()
     db.refresh(rental)
     return rental

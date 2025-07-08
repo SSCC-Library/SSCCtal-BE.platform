@@ -9,6 +9,10 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     success: bool
     code: int
-    name: Optional[str] = None
-    student_id: Optional[int] = None
     token: Optional[str] = None
+    name: Optional[str] = None
+
+    model_config = {
+        "from_attributes": True,
+        "exclude_none": True
+    }

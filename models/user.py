@@ -41,7 +41,7 @@ class User(Base):
         comment="이름"
     )
     email = Column(
-        String(30),
+        String(100),
         nullable=False,
         unique=True,
         comment="이메일 주소"

@@ -4,6 +4,10 @@ from database import get_db
 from models.user import User
 from schemas.login import LoginRequest, LoginResponse
 import httpx
+from security import create_access_token
+
+
+
 
 router = APIRouter()
 
@@ -29,31 +33,18 @@ async def saint_auth(student_id: int, password: str) -> str:
         return s_token
 
 
-@router.post("/api/v1/login", response_model=LoginResponse)
+@router.post("/login", response_model=LoginResponse)
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     s_token = await saint_auth(data.student_id, data.password)
-    print(s_token)
     if not s_token:
-        return LoginResponse(
-            success=False,
-            code=400
-        )
-
+        return LoginResponse(success=False, code=400)
+    
     user = db.query(User).filter(User.student_id == data.student_id).first()
-
     if not user:
-        return LoginResponse(
-            success=False,
-            code=401
-        )
+        return LoginResponse(success=False, code=401)
 
-    return LoginResponse(
-        success=True,
-        code=200,
-        name=user.name,
-        student_id=user.student_id,
-        token="jwt-token-placeholder"
-    )
+    token = create_access_token({"student_id": user.student_id})
+    return LoginResponse(success=True, code=200, token=token, name=user.name)
 
 
 @router.post("/api/v1/logout")

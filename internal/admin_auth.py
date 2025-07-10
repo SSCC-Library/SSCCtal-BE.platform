@@ -7,9 +7,7 @@ import httpx
 from security import create_access_token
 
 
-
-
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["admin_auth"])
 
 
 async def saint_auth(student_id: int, password: str) -> str:
@@ -47,10 +45,9 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     return LoginResponse(success=True, code=200, token=token, name=user.name,student_id=student_id)
 
 
-@router.post("/logout")
+@router.post("/api/v1/logout")
 def logout():
     return {
         "success": True,
-        "code": 200,
-        "message": "로그아웃이 완료되었습니다."
+        "code": 200
     }

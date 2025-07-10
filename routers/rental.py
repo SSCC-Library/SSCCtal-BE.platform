@@ -17,7 +17,7 @@ class RentalRequest(BaseModel) :
     student_id : int
     copy_id : int
 
-@router.get("/user", response_model=RentalListResponse)
+@router.get("/user", response_model=RentalListResponse) #개인 구부jwt 로직 추가 필요
 def get_rentals(
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(10, ge=1, le=100, description="페이지당 개수"),

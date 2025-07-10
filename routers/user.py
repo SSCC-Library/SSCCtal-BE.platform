@@ -1,13 +1,64 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from models.rental import Rental
+from models.item import Item
+from models.item_copy import ItemCopy
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
-from schemas.user import UserBase, UserCreate, UserUpdate
+from schemas.user import UserBase, UserCreate, UserUpdate,PersonalRentalItem,PersonalRentalListResponse
 from dependencies import hash_phone_number
+from security import get_current_user
 
-router = APIRouter(prefix="/users/v1", tags=["users"])
+router = APIRouter(prefix="/users", tags=["users"])
+
+size = 12
+
+@router.get("/me/rentals",response_model=PersonalRentalListResponse)
+def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
+    student_id : int = Depends(get_current_user),
+    db: Session = Depends(get_db)) :
+
+    query = (
+        db.query(Rental)
+        .join(ItemCopy, Rental.copy_id == ItemCopy.copy_id)
+        .join(Item, ItemCopy.item_id == Item.item_id)
+        .filter(Rental.student_id == student_id)
+    )
+
+    offset = (page - 1) * size
+    rentals = query.offset(offset).limit(size).all()
+
+    if not rentals:
+        return PersonalRentalListResponse(
+        success= True,
+        code= 404
+        )
+    
+    result = []
+    for rental in rentals:
+        item = rental.item_copy.item  # 관계를 통해 접근
+        status = "반납 완료" if rental.item_return_date else "대여 중"
+        overdue_days = rental.overdue if rental.overdue is not None else 0
+
+        result.append({
+            "name": item.name,
+            "status": status,
+            "overdue": overdue_days   
+        })
+    return PersonalRentalListResponse(
+        success= True,
+        code= 200,
+        items= result,
+        page= page,
+        size= size
+    )
+
+
+
+
+
 
 # 전체 유저 목록 조회
 @router.get("/v1/", response_model=List[UserBase])

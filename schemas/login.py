@@ -11,7 +11,7 @@ class LoginResponse(BaseModel):
     code: int
     token: Optional[str] = None
     name: Optional[str] = None
-
+    student_id : Optional[int] = None
     model_config = {
         "from_attributes": True,
         "exclude_none": True

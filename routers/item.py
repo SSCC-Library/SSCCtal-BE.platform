@@ -8,11 +8,11 @@ from dependencies import DeletionStatusEnum
 
 router = APIRouter(prefix="/items", tags=["items"])
 
+size=12
 
 @router.get("/user", response_model=ItemListResponse)
 def get_items(
     page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
-    size: int = Query(10, ge=1, le=100, description="한 페이지 당 개수"),
     search_text: Optional[str] = Query(None, description="검색어 (이름 또는 해시태그)"),
     db: Session = Depends(get_db)
 ):
@@ -24,7 +24,9 @@ def get_items(
             (Item.name.ilike(search)) | (Item.hashtag.ilike(search))
         )
 
-    items = query.offset((page - 1) * size).limit(size).all()
+    # 페이지 계산
+    offset = (page - 1) * size
+    items = query.offset(offset).limit(size).all()
 
     if not items:
         return ItemListResponse(success=False, code=404)
@@ -39,7 +41,7 @@ def get_items(
 
 
 
-@router.get("/admin/items", response_model=AdminItemListResponse)
+@router.get("/admin", response_model=AdminItemListResponse)
 def get_items_with_copy_info(
     page: int = 1,
     size: int = 10,
@@ -73,12 +75,12 @@ def get_items_with_copy_info(
 
 
 #아이템 목록 전체 조회
-@router.get("/", response_model=List[ItemBase])
+@router.get("/", response_model=List[ItemCreate])
 def get_items(db: Session = Depends(get_db)):
     items = db.query(Item).filter(Item.delete_status!= DeletionStatusEnum.DELETED).all()
     return items
 
-#아이템 id 조회
+#운영자 아이템 개별 조회
 @router.get("/admin/{item_id}", response_model=AdminItemResponse)
 def get_item(item_id: int, db: Session = Depends(get_db)):
     item = db.query(Item).filter(Item.item_id == item_id,Item.delete_status!= DeletionStatusEnum.DELETED).first()

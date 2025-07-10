@@ -5,23 +5,31 @@ from models.item import ItemTypeEnum
 from models.item_copy import CopyStatusEnum
 
 class ItemBase(BaseModel):
-    identifier_code: str
     name: str
     type: ItemTypeEnum
+    identifier_code: str
     publisher: Optional[str] = None
-    publish_date: Optional[date] = None
     hashtag: Optional[str] = None
     image_url: Optional[str] = None
     total_count: Optional[int] = 0
     available_count: Optional[int] = 0
 
+
+
+class ItemCreate(ItemBase):
+    publish_date: Optional[date] = None
+    
     model_config = {
         "from_attributes": True 
     }
 
 
-class ItemCreate(ItemBase):
-    pass
+class ItemResponse(ItemBase) :
+    copy_status: Optional[CopyStatusEnum]=None
+
+    model_config = {
+        "from_attributes": True 
+    }
 
 class Item(ItemBase):
     item_id: int

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
-from schemas.item_copy import ItemCopyCreate,ItemCopyUpdate, ItemCopySchemas
+from schemas.item_copy import ItemCopyCreate,ItemCopyUpdate, ItemCopyResponse
 from models.item_copy import ItemCopy
 from database import get_db
 from dependencies import DeletionStatusEnum
@@ -10,13 +10,13 @@ router = APIRouter(prefix="/copies", tags=["copies"])
 
 
 # 전체 복사본 조회
-@router.get("/v1", response_model=List[ItemCopySchemas])
+@router.get("/v1", response_model=List[ItemCopyResponse])
 def get_copies(db: Session = Depends(get_db)):
     copies= db.query(ItemCopy).filter(ItemCopy.delete_status!= DeletionStatusEnum.DELETED).all()
     return copies
 
 # 복사본 단일 조회
-@router.get("/v1/{copy_id}",response_model=ItemCopySchemas)
+@router.get("/v1/{copy_id}",response_model=ItemCopyResponse)
 def get_copy(copy_id: int, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id,ItemCopy.delete_status!= DeletionStatusEnum.DELETED).first()
     if not copy:

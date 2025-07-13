@@ -22,6 +22,16 @@ class UserBase(BaseModel):
         "from_attributes": True 
     }
 
+class UsersBase(BaseModel) :
+    student_id: int
+    name: str
+    email: EmailStr
+    phone_number: Optional[str] = None
+    gender: Optional[GenderEnum] = GenderEnum.MALE
+    major: Optional[str] = None
+    major2: Optional[str] = None
+    minor: Optional[str] = None
+
 class UserCreate(BaseModel):
     student_id: int
     name: str
@@ -48,6 +58,15 @@ class UserResponse(BaseModel):
     success : bool
     code : int
     user : Optional[UserBase]=None
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class UsersResponse(BaseModel) :
+    success : bool
+    code : int
+    user : Optional[UsersBase]=None
 
     model_config = {
         "from_attributes": True

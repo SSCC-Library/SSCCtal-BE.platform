@@ -1,46 +1,76 @@
 from fastapi import APIRouter, HTTPException,Depends,Query
 from models.item import Item
+from models.item_copy import ItemCopy
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from schemas.item import ItemCreate, ItemBase, ItemListResponse,AdminItemListResponse, AdminItemResponse
+from schemas.item import ItemCreate, ItemBase, ItemListResponse, AdminItemSimple,AdminItemListResponse
 from dependencies import DeletionStatusEnum
+from sqlalchemy import cast, String
 
 router = APIRouter(prefix="/items", tags=["items"])
 
 size=12
 
-@router.get("/user", response_model=ItemListResponse)
-def get_items(
-    page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
-    search_text: Optional[str] = Query(None, description="검색어 (이름 또는 해시태그)"),
+
+@router.get("/user", response_model=AdminItemListResponse)
+def get_admin_items(
+    page: int = Query(1, ge=1),
+    search_type: Optional[str] = Query(None),
+    search_text: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Item).filter(Item.delete_status != DeletionStatusEnum.DELETED)
-
-    if search_text:
-        search = f"%{search_text}%"
-        query = query.filter(
-            (Item.name.ilike(search)) | (Item.hashtag.ilike(search))
-        )
-
-    # 페이지 계산
     offset = (page - 1) * size
-    items = query.offset(offset).limit(size).all()
 
-    if not items:
-        return ItemListResponse(success=False, code=404)
+    # Base query with join
+    query = db.query(
+        ItemCopy.copy_id,
+        ItemCopy.item_id,
+        ItemCopy.copy_status,
+        Item.identifier_code,
+        Item.name,
+        Item.type,
+        Item.hashtag
+    ).join(Item, Item.item_id == ItemCopy.item_id)
 
-    return ItemListResponse(
+    # Filtering
+    if search_type and search_text:
+        keyword = f"%{search_text}%"
+        if search_type == "item_id":
+            query = query.filter(cast(Item.item_id, String).ilike(keyword))
+        elif search_type == "name":
+            query = query.filter(Item.name.ilike(keyword))
+        elif search_type == "hashtag":
+            query = query.filter(Item.hashtag.ilike(keyword))
+
+    total = query.count()
+    rows = query.offset(offset).limit(size).all()
+
+    if not rows:
+        return AdminItemListResponse(success=False, code=404)
+
+    items = [
+        AdminItemSimple(
+            copy_id=row.copy_id,
+            item_id=row.item_id,
+            copy_status=row.copy_status,
+            identifier_code=row.identifier_code,
+            name=row.name,
+            type=row.type,
+            hashtag=row.hashtag
+        )
+        for row in rows
+    ]
+
+    return AdminItemListResponse(
         success=True,
         code=200,
         items=items,
+        total=total,
         page=page,
         size=size
     )
-
-
-
+'''
 @router.get("/admin", response_model=AdminItemListResponse)
 def get_items_with_copy_info(
     page: int = 1,
@@ -129,3 +159,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     item.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()
     return {"success": True, "message": "Item deleted"}
+    '''

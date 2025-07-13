@@ -5,17 +5,19 @@ from schemas.user import UserResponse
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
-from schemas.user import UserBase, UserCreate, UserUpdate
+from schemas.user import UserBase, UserCreate, UserUpdate,UsersBase,UsersResponse
 from dependencies import hash_phone_number
 from security import get_current_user
 
 router = APIRouter(prefix="/users", tags=["admin_users"])
 
 # 전체 유저 목록 조회
-@router.get("/", response_model=List[UserBase])
+@router.get("/")
 def read_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
-    return users
+    return {"success" : True, "code" :200, "users" : users, "page" : 2}
+
+    
 
 # 단일 유저 조회
 @router.get("/search/{student_id}")
@@ -84,9 +86,11 @@ def update_user(student_id: int, update_data: UserUpdate, db: Session = Depends(
 # 유저 삭제 (회원탈퇴 처리)
 @router.post("/delete/{student_id}")
 def delete_user(student_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.student_id == student_id).first()
+    user = db.query(User).filter(User.student_id == student_id,
+        User.delete_status != UserStatusEnum.DELETED).first()
+    
     if not user:
-        return {"success" : False, "code" :503}
+        return {"success" : False, "code" :503} 
     
     user.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()

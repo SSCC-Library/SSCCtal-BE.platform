@@ -15,7 +15,7 @@ class ItemCopyCreate(ItemCopyBase):
 
 class ItemCopyUpdate(ItemCopyBase) :
     pass
-class ItemCopySchemas(ItemCopyBase):
+class ItemCopyResponse(ItemCopyBase):
     copy_id: int
     create_date: datetime
     update_date: datetime

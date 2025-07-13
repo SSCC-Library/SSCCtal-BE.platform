@@ -42,15 +42,6 @@ class Item(ItemBase):
     }
 
 
-class AdminItemResponse(BaseModel) :
-    success: bool
-    code: int
-    data: Optional[Item] = None
-
-    model_config = {
-        "from_attributes": True,
-        "exclude_none": True
-    }
 
 class ItemListResponse(BaseModel):
     success: bool
@@ -59,27 +50,54 @@ class ItemListResponse(BaseModel):
     page: Optional[int] = None
     size: Optional[int] = None
 
-
-class AdminItemBase(BaseModel):
+class ItemDetail(BaseModel):
+    copy_id: int
     item_id: int
+    identifier_code: str
+    copy_status: CopyStatusEnum
+    create_date: datetime
+    update_date: datetime
     name: str
     type: ItemTypeEnum
+    publisher: str
+    publish_date: date
+    hashtag: str
+    image_url: str
+    total_count: int
+    available_count: int
+
+    model_config = {
+        "from_attributes": True,
+        "use_enum_values": True
+    }
+
+class ItemCopyResponse(BaseModel):
+    success: bool
+    code: int
+    item: Optional[ItemDetail] = None
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class AdminItemSimple(BaseModel):
+    copy_id: int
+    item_id: int
+    name: str
+    type: str
     copy_status: CopyStatusEnum
     identifier_code: str
     hashtag: Optional[str]
 
     model_config = {
         "from_attributes": True,
-        "exclude_none": True
+        "use_enum_values": True  # enum → 문자열 변환
     }
 
 class AdminItemListResponse(BaseModel):
     success: bool
     code: int
-    items: Optional[List[AdminItemBase]] = None
+    items: Optional[List[AdminItemSimple]] = None
+    total: Optional[int] = None
     page: Optional[int] = None
     size: Optional[int] = None
-
-    model_config = {
-        "exclude_none": True
-    }

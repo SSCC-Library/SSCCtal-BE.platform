@@ -27,15 +27,16 @@ class RentalMainInfo(BaseModel) :
     item_return_date: Optional[datetime]
     overdue: int
 
-class RentalUpdate(BaseModel):
+class OverdueResponse(BaseModel):
+    rental_id: int
     name: Optional[str] = None        # 책 제목
-    type: Optional[str] = None        # 책 / 기자재 등
+    type: Optional[ItemTypeEnum] = None        # 책 / 기자재 등
     user_name: Optional[str] = None
     student_id: Optional[str] = None
     item_borrow_date: Optional[datetime] = None
     item_return_date: Optional[datetime] = None
     rental_status: Optional[RentalStatusEnum] = None
-
+    overdue: int
     model_config = {
         "from_attributes": True,
         "use_enum_values": True

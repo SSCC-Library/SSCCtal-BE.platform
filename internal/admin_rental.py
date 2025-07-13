@@ -40,6 +40,7 @@ def get_admin_rentals(
     results = []
     for rental in rentals:
         rental_data = RentalMainInfo(
+            rental_id=rental.rental_id,
             student_id=rental.student_id,
             rental_status=rental.rental_status,
             item_borrow_date=rental.item_borrow_date,
@@ -58,3 +59,5 @@ def get_admin_rentals(
         code=200,
         data=results
     )
+
+

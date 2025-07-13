@@ -18,6 +18,7 @@ class RentalBase(BaseModel):
     delete_status: DeletionStatusEnum
 
 class RentalMainInfo(BaseModel) :
+    rental_id: int
     student_id: int
     rental_status: RentalStatusEnum
     item_borrow_date: datetime

@@ -3,6 +3,10 @@ from typing import Optional,List
 from datetime import datetime, date
 from models.rental import RentalStatusEnum
 
+
+
+
+
 class RentalBase(BaseModel):
     student_id: int
     copy_id: int
@@ -56,3 +60,11 @@ class RentalListResponse(BaseModel):
     model_config = {
         "exclude_none": True
     }
+
+
+class AdminRentalInfo(BaseModel) :
+    name: str
+    type: str
+    identifier_code: str
+    publisher: Optional[str] = None
+    image_url: Optional[str] = None

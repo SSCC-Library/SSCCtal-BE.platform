@@ -12,7 +12,7 @@ router = APIRouter(prefix="/items", tags=["admin_items"])
 
 size=12
 
-@router.get("/admin/items", response_model=AdminItemListResponse)
+@router.get("", response_model=AdminItemListResponse)
 def get_admin_items(
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),

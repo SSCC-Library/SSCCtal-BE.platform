@@ -36,8 +36,6 @@ class Rental(Base):
         default=RentalStatusEnum.BORROWED,
         comment="복사본의 대출 상태: borrowed(대여 중), returned(반납), overdue(연체)"
     )
-    # rental_classification = Column(String)  # 대출 유형 구분 (예: short_term, reserved 등)
-
     item_borrow_date = Column(
         DateTime,
         comment="대출 일시"

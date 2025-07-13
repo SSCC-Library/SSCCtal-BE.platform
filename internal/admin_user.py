@@ -2,22 +2,44 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from schemas.user import UserResponse
+from schemas.response import CommonResponse
+from new_schemas.user import UserMainInfo
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
 from schemas.user import UserBase, UserCreate, UserUpdate,UsersBase,UsersResponse
-from dependencies import hash_phone_number
+from dependencies import hash_phone_number,DeletionStatusEnum
 from security import get_current_user
 
 router = APIRouter(prefix="/users", tags=["admin_users"])
 
-# 전체 유저 목록 조회
-@router.get("/")
-def read_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return {"success" : True, "code" :200, "users" : users, "page" : 2}
+size =12
 
-    
+@router.get("/admin/users/1235", response_model=CommonResponse[List[UserMainInfo]])
+def get_admin_users(
+    page: int = Query(..., ge=1, description="페이지 번호 (1부터 시작)"),
+    search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
+    search_text: Optional[str] = Query(None, description="검색어"),
+    db: Session = Depends(get_db)
+):
+    offset = (page - 1) * size
+
+    query = db.query(User).filter(User.delete_status != DeletionStatusEnum.DELETED)
+
+    if search_type and search_text:
+        if search_type == "student_id":
+            query = query.filter(User.student_id == int(search_text))
+        elif search_type == "name":
+            query = query.filter(User.name.ilike(f"%{search_text}%"))
+
+    users = query.offset(offset).limit(size).all()
+
+    if not users:
+        return CommonResponse(success=False, code=404)
+
+    #user_list = [UserMainInfo.from_orm(user) for user in users]
+
+    return CommonResponse(success=True, code=200, data=users)    
 
 # 단일 유저 조회
 @router.get("/search/{student_id}")

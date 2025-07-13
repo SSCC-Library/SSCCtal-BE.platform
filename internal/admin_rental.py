@@ -72,3 +72,23 @@ def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
         CommonResponse(success=False,code=404)
 
     return CommonResponse(success=True,code=200,data=rental)
+
+
+@router.post("/update/{rental_id}", response_model=CommonResponse)
+def update_rental_main_info(
+    rental_id: int,
+    data: RentalMainInfo,
+    db: Session = Depends(get_db)
+):
+    rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
+
+    if not rental:
+        CommonResponse(success=False,code=404)
+
+    for field, value in data.dict(exclude_none=True).items():
+        setattr(rental, field, value)
+
+    db.commit()
+    db.refresh(rental)
+
+    return CommonResponse(success=True,code=200)

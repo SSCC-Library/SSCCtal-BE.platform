@@ -16,3 +16,11 @@ class RentalBase(BaseModel):
     created_at: datetime
     updated_at: datetime
     delete_status: DeletionStatusEnum
+
+class RentalMainInfo(BaseModel) :
+    student_id: int
+    rental_status: RentalStatusEnum
+    item_borrow_date: datetime
+    expectation_return_date: date
+    item_return_date: Optional[datetime]
+    overdue: int

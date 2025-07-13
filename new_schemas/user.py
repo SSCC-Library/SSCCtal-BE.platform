@@ -30,3 +30,6 @@ class UserMainInfo(BaseModel) :
     major2: Optional[str]
     minor: Optional[str]
 
+class UserSimpleInfo(BaseModel) :
+    student_id: int
+    name: str

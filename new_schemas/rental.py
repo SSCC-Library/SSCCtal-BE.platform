@@ -13,8 +13,8 @@ class RentalBase(BaseModel):
     expectation_return_date: date
     item_return_date: Optional[datetime]
     overdue: int
-    created_at: datetime
-    updated_at: datetime
+    create_date: datetime
+    update_date: datetime
     delete_status: DeletionStatusEnum
 
 class RentalMainInfo(BaseModel) :

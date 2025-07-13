@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 from database import get_db
 from new_schemas.user import UserSimpleInfo
-from new_schemas.rental import RentalMainInfo
+from new_schemas.rental import RentalMainInfo,RentalBase
 from schemas.response import CommonResponse, RentalWithUserData
 from models.user import User
 from models.rental import Rental
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
 
 
 size = 12
-@router.get("/admin/rentals", response_model=CommonResponse[List[RentalWithUserData]])
+@router.get("", response_model=CommonResponse[List[RentalWithUserData]])
 def get_admin_rentals(
     page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
     search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
@@ -37,6 +37,9 @@ def get_admin_rentals(
 
     rentals = query.offset(offset).limit(size).all()
 
+    if not rentals:
+        return CommonResponse(success=False,code=404)
+    
     results = []
     for rental in rentals:
         rental_data = RentalMainInfo(
@@ -61,3 +64,11 @@ def get_admin_rentals(
     )
 
 
+@router.get("/{rental_id}", response_model=CommonResponse[RentalBase])
+def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
+    rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
+    
+    if not rental:
+        CommonResponse(success=False,code=404)
+
+    return CommonResponse(success=True,code=200,data=rental)

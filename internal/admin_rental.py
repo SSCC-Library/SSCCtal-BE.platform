@@ -26,7 +26,7 @@ def get_admin_rentals(
 
     query = db.query(Rental).join(User, User.student_id == Rental.student_id)
 
-    if search_type and search_text:
+    if search_type and search_text: 
         if search_type == "student_id":
             query = query.filter(User.student_id == int(search_text))
         elif search_type == "name":
@@ -64,7 +64,7 @@ def get_admin_rentals(
         data=results
     )
 
-
+#대여 상세 정보 조회
 @router.get("/{rental_id}", response_model=CommonResponse[RentalBase])
 def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
@@ -74,8 +74,8 @@ def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
 
     return CommonResponse(success=True,code=200,data=rental)
 
-
-@router.post("/update/{rental_id}", response_model=CommonResponse)
+#대여 기록 수정
+@router.post("/{rental_id}", response_model=CommonResponse)
 def update_rental_main_info(
     rental_id: int,
     data: RentalMainInfo,

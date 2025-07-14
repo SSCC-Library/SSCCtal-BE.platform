@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from schemas.user import UserResponse
 from schemas.response import CommonResponse
-from new_schemas.user import UserMainInfo
+from new_schemas.user import UserMainInfo,UserBase
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
-from schemas.user import UserBase, UserCreate, UserUpdate,UsersBase,UsersResponse
+from schemas.user import UserCreate, UserUpdate
 from dependencies import hash_phone_number,DeletionStatusEnum
 from security import get_current_user
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/users", tags=["admin_users"])
 
 size =12
 
-@router.get("/admin/users/1235", response_model=CommonResponse[List[UserMainInfo]])
+@router.get("", response_model=CommonResponse[List[UserMainInfo]])
 def get_admin_users(
     page: int = Query(..., ge=1, description="페이지 번호 (1부터 시작)"),
     search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
@@ -37,12 +37,11 @@ def get_admin_users(
     if not users:
         return CommonResponse(success=False, code=404)
 
-    #user_list = [UserMainInfo.from_orm(user) for user in users]
 
     return CommonResponse(success=True, code=200, data=users)    
 
 # 단일 유저 조회
-@router.get("/search/{student_id}")
+@router.get("/search/{student_id}",response_model=CommonResponse[UserBase])
 def search_users(
     student_id: Optional[int] = None,
     name: Optional[str] = None,
@@ -61,15 +60,15 @@ def search_users(
     user = query.first()
 
     if not user:
-        return UserResponse(
+        return CommonResponse(
             success=False,
             code=404
         )
     
-    return UserResponse(
+    return CommonResponse(
         success=True,
         code=200,
-        user=user
+        data=user
     )
 
 # 유저 생성 (테스트용)

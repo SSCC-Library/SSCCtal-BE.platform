@@ -23,7 +23,8 @@ class ItemBase(BaseModel):
 class ItemMainInfo(BaseModel) :
     name: str
     type: ItemTypeEnum
-
+    hashtag: str
+    
     model_config = {
         "from_attributes": True,
         "use_enum_values": True

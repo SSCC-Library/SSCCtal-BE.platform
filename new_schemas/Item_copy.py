@@ -13,8 +13,13 @@ class ItemCopyBase(BaseModel):
     update_date: datetime
     delete_status: DeletionStatusEnum
 
-class ItemMainInfo(BaseModel) :
+class ItemCopyMainInfo(BaseModel) :
     copy_id: int
     item_id: int
     identifier_code: str
     copy_status: CopyStatusEnum
+    
+    model_config = {
+        "from_attributes": True,
+        "use_enum_values": True
+    }

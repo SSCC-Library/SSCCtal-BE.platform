@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
 from models.item_copy import CopyStatusEnum
 from dependencies import DeletionStatusEnum
@@ -18,7 +17,7 @@ class ItemCopyMainInfo(BaseModel) :
     item_id: int
     identifier_code: str
     copy_status: CopyStatusEnum
-    
+
     model_config = {
         "from_attributes": True,
         "use_enum_values": True

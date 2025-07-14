@@ -16,7 +16,7 @@ def get_admin_user(
 ) -> int:
     user = db.query(User).filter(User.student_id == student_id).first()
     if not user:
-        return CommonResponse(success=False,status_code=404) # 사용자가 없을 시
+        return CommonResponse(success=False, code=404) # 사용자가 없을 시
 
     if user.user_classification != UserClassificationEnum.STAFF:  # 관리자 아닐 시
         return CommonResponse(success=False,code=403, detail="관리자 권한이 필요합니다.")

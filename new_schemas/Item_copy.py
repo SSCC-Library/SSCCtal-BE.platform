@@ -9,8 +9,8 @@ class ItemCopyBase(BaseModel):
     item_id: int
     identifier_code: str
     copy_status: CopyStatusEnum
-    created_at: datetime
-    updated_at: datetime
+    create_date: datetime
+    update_date: datetime
     delete_status: DeletionStatusEnum
 
 class ItemMainInfo(BaseModel) :

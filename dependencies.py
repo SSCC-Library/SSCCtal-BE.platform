@@ -15,3 +15,4 @@ def hash_phone_number(phone: str) -> str:
 class DeletionStatusEnum(str, Enum):
     ACTIVE = "ACTIVE"      # 사용 가능
     DELETED = "DELETED"    # 논리적으로 삭제됨
+

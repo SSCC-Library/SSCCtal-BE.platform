@@ -15,8 +15,8 @@ class UserBase(BaseModel):
     major2: Optional[str]
     minor: Optional[str]
     user_classification: UserClassificationEnum
-    joined_at: datetime
-    updated_at: datetime
+    join_date: datetime
+    update_date: datetime
     user_status: UserStatusEnum
     delete_status: DeletionStatusEnum
 

@@ -16,8 +16,8 @@ class ItemBase(BaseModel):
     image_url: Optional[str]
     total_count: int
     available_count: int
-    created_at: datetime
-    updated_at: datetime
+    create_date: datetime
+    update_date: datetime
     delete_status: DeletionStatusEnum
 
 class ItemMainInfo(BaseModel) :

@@ -1,13 +1,27 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from models.user import User
+from models.user import User,UserClassificationEnum
 from schemas.login import LoginRequest, LoginResponse
 import httpx
-from security import create_access_token
-
+from security import create_access_token,get_current_user
+from schemas.response import CommonResponse
 
 router = APIRouter(prefix="/auth", tags=["admin_auth"])
+
+#관리자 인증 함수
+def get_admin_user(
+    student_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> int:
+    user = db.query(User).filter(User.student_id == student_id).first()
+    if not user:
+        return CommonResponse(success=False,status_code=404) # 사용자가 없을 시
+
+    if user.user_classification != UserClassificationEnum.STAFF:  # 관리자 아닐 시
+        return CommonResponse(success=False,code=403, detail="관리자 권한이 필요합니다.")
+
+    return student_id 
 
 
 async def saint_auth(student_id: int, password: str) -> str:

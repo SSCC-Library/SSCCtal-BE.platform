@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException,Depends,Query
-from models.item import Item
-from models.item_copy import ItemCopy
+from models.item import Item, ItemTypeEnum
+from models.item_copy import ItemCopy,CopyStatusEnum
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from schemas.item import AdminItemListResponse,AdminItemSimple,ItemDetail,ItemCopyResponse
-#from schemas.item_copy import ItemCopyResponse
+from new_schemas.response import CommonResponse, ItemWithItemCopyData
+from new_schemas.item import ItemMainInfo, AdminItemMainInfo
+from new_schemas.item_copy import ItemCopyBase
 from sqlalchemy import cast, String
 
 router = APIRouter(prefix="/items", tags=["admin_items"])
@@ -71,7 +73,7 @@ def get_admin_items(
         size=size
     )
 
-@router.get("/{copy_id}", response_model=ItemCopyResponse)
+@router.get("/{copy_id}", response_model=CommonResponse[ItemWithItemCopyData])
 def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
@@ -81,25 +83,33 @@ def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
     if not item:
         return ItemCopyResponse(success=False, code=404, item=None)
 
-    item_detail = ItemDetail(
-    copy_id=copy.copy_id,
-    item_id=copy.item_id,
-    identifier_code=copy.identifier_code,
-    copy_status=copy.copy_status.value,  # enum은 .value 꼭 써줘야 함
-    create_date=copy.create_date,
-    update_date=copy.update_date,
-    name=item.name,
-    type=item.type.value,
-    publisher=item.publisher,
-    publish_date=item.publish_date,
-    hashtag=item.hashtag,
-    image_url=item.image_url,
-    total_count=item.total_count,
-    available_count=item.available_count
-)
+    item_copy_data = ItemCopyBase(
+        copy_id=copy.copy_id,
+        item_id=copy.item_id,
+        identifier_code=copy.identifier_code,
+        copy_status=copy.copy_status,
+        create_date=copy.create_date,
+        update_date=copy.update_date,
+        delete_status=copy.delete_status
+    )
 
-    return ItemCopyResponse(
+    item_data = AdminItemMainInfo(
+        item_id=item.item_id,
+        name=item.name,
+        type=item.type,
+        publisher=item.publisher,
+        publish_date=item.publish_date,
+        hashtag=item.hashtag,
+        image_url=item.image_url,
+        total_count=item.total_count,
+        available_count=item.available_count
+    )
+
+    return CommonResponse(
         success=True,
         code=200,
-        item=item_detail  # ✅ 객체로 감싸기!
+        data=ItemWithItemCopyData(
+            item=item_data,
+            item_copy=item_copy_data
+        )
     )

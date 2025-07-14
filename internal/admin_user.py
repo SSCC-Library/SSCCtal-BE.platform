@@ -72,47 +72,47 @@ def search_users(
     )
 
 # 유저 생성 (테스트용)
-@router.post("/create")
-def create_user(user_data: UserCreate, db: Session = Depends(get_db)):
+@router.post("/create", response_model=CommonResponse)
+def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
         (User.email == user_data.email) | (User.student_id == user_data.student_id)
     ).first()
     
     if existing_user:
-        return {"success" : False, "code" :503}
+        return CommonResponse(success = False, code= 503)
     user = User(**user_data.model_dump())
     user.phone_number=hash_phone_number(user.phone_number)  #전화번호 해시
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"success" : True, "code" :200}
+    return CommonResponse(success = True, code= 200)
 
 # 유저 정보 업데이트  (기존 데이터를 보여줘야합니다)
-@router.post("/update/{student_id}")
+@router.post("/update/{student_id}",response_model=CommonResponse)
 def update_user(student_id: int, update_data: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.user_status != UserStatusEnum.DELETED
         ).first()
     if not user:
-        return {"success" : False, "code" :503}
+        return CommonResponse(success = False, code= 503)
 
     for field, value in update_data.dict(exclude_unset=True).items():
         setattr(user, field, value)
     user.phone_number=hash_phone_number(user.phone_number)  #전화번호 해시
     db.commit()
     db.refresh(user)
-    return {"success" : True, "code" :200}
+    return CommonResponse(success = True, code= 200)
 
 
 # 유저 삭제 (회원탈퇴 처리)
-@router.post("/delete/{student_id}")
+@router.post("/delete/{student_id}",response_model=CommonResponse)
 def delete_user(student_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.delete_status != UserStatusEnum.DELETED).first()
     
     if not user:
-        return {"success" : False, "code" :503} 
+        return CommonResponse(success = False, code= 503)
     
     user.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()
-    return {"success" : True, "code" :200}
+    return CommonResponse(success = True, code= 200)

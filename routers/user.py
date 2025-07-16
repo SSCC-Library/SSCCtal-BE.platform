@@ -10,15 +10,16 @@ from database import get_db
 from schemas.user import UserBase, UserCreate, UserUpdate,PersonalRentalItem,PersonalRentalListResponse
 from dependencies import hash_phone_number
 from security import get_current_user
+from new_schemas.response import CommonResponse
+from new_schemas.rental import RentalMainInfo
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 size = 12
 
-@router.get("/me/rentals",response_model=PersonalRentalListResponse)
+@router.get("/me/rentals",response_model=CommonResponse[list[RentalMainInfo]])
 def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
-    student_id : int = Depends(get_current_user),
-    db: Session = Depends(get_db)) :
+    student_id : Optional[int] = None, db: Session = Depends(get_db)) :
 
     query = (
         db.query(Rental)
@@ -31,26 +32,28 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
     rentals = query.offset(offset).limit(size).all()
 
     if not rentals:
-        return PersonalRentalListResponse(
-        success= True,
+        return CommonResponse(
+        success= False,
         code= 404
         )
     
     result = []
     for rental in rentals:
-        item = rental.item_copy.item  # 관계를 통해 접근
-        status = "반납 완료" if rental.item_return_date else "대여 중"
-        overdue_days = rental.overdue if rental.overdue is not None else 0
+       
 
-        result.append({
-            "name": item.name,
-            "status": status,
-            "overdue": overdue_days   
-        })
-    return PersonalRentalListResponse(
+        result.append(RentalMainInfo(
+        rental_id=rental.rental_id,
+        student_id=rental.student_id,
+        rental_status=rental.rental_status,
+        item_borrow_date=rental.item_borrow_date,
+        expectation_return_date=rental.expectation_return_date,
+        item_return_date=rental.item_return_date,
+        overdue=rental.overdue
+))
+    return CommonResponse(
         success= True,
         code= 200,
-        items= result,
+        data= result,
         page= page,
         size= size
     )

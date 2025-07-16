@@ -4,7 +4,7 @@ from typing import List, Optional
 from database import get_db
 from new_schemas.user import UserSimpleInfo
 from new_schemas.rental import RentalMainInfo,RentalBase
-from schemas.response import CommonResponse, RentalWithUserData
+from new_schemas.response import CommonResponse, RentalWithUserData
 from models.user import User
 from models.rental import Rental,RentalStatusEnum
 
@@ -21,7 +21,7 @@ def get_admin_rentals(
     rental_status: Optional[RentalStatusEnum] = Query(None, description="대여 상태 필터 (borrowed, returned, overdue)"),
     db: Session = Depends(get_db)
 ):
-    size = 10
+
     offset = (page - 1) * size
 
     query = db.query(Rental).join(User, User.student_id == Rental.student_id)
@@ -61,7 +61,9 @@ def get_admin_rentals(
     return CommonResponse(
         success=True,
         code=200,
-        data=results
+        data=results,
+        page = page,
+        size = size
     )
 
 #대여 상세 정보 조회

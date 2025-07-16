@@ -1,8 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from schemas.user import UserResponse
-from schemas.response import CommonResponse
+from new_schemas.response import CommonResponse
 from new_schemas.user import UserMainInfo,UserBase
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum

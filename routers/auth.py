@@ -7,8 +7,6 @@ import httpx
 from security import create_access_token
 
 
-
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 

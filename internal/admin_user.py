@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from new_schemas.response import CommonResponse
@@ -6,9 +6,8 @@ from new_schemas.user import UserMainInfo,UserBase
 from models.user import User
 from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
-from schemas.user import UserCreate, UserUpdate
 from dependencies import hash_phone_number,DeletionStatusEnum
-from security import get_current_user
+#from security import get_current_user
 
 router = APIRouter(prefix="/users", tags=["admin_users"])
 
@@ -88,7 +87,7 @@ def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
 
 # 유저 정보 업데이트  (기존 데이터를 보여줘야합니다)
 @router.post("/update/{student_id}",response_model=CommonResponse)
-def update_user(student_id: int, update_data: UserUpdate, db: Session = Depends(get_db)):
+def update_user(student_id: int, update_data: UserMainInfo, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.user_status != UserStatusEnum.DELETED
         ).first()

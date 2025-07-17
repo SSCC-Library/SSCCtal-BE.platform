@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException,Depends,Query
-from models.item import Item, ItemTypeEnum
-from models.item_copy import ItemCopy,CopyStatusEnum
+from fastapi import APIRouter,Depends,Query
+from models.item import Item
+from models.item_copy import ItemCopy
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from schemas.item import AdminItemListResponse,AdminItemSimple,ItemDetail,ItemCopyResponse
 from new_schemas.response import CommonResponse, ItemWithItemCopyData,ListItemWithCopyData
 from new_schemas.item import ItemMainInfo, AdminItemMainInfo
 from new_schemas.item_copy import ItemCopyBase,ItemCopyMainInfo
@@ -68,11 +67,11 @@ def get_admin_items(
 def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
-        return ItemCopyResponse(success=False, code=404, item=None)
+        return CommonResponse(success=False, code=404)
 
     item = db.query(Item).filter(Item.item_id == copy.item_id).first()
     if not item:
-        return ItemCopyResponse(success=False, code=404, item=None)
+        return CommonResponse(success=False, code=404)
 
     item_copy_data = ItemCopyBase(
         copy_id=copy.copy_id,

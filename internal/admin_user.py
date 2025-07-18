@@ -29,14 +29,14 @@ def get_admin_users(
             query = query.filter(User.student_id == int(search_text))
         elif search_type == "name":
             query = query.filter(User.name.ilike(f"%{search_text}%"))
-
+    count=query.count()
     users = query.offset(offset).limit(size).all()
 
     if not users:
         return CommonResponse(success=False, code=404)
 
 
-    return CommonResponse(success=True, code=200, data=users,page = page, size = size)    
+    return CommonResponse(success=True, code=200, data=users,count=count,page = page, size = size)    
 
 # 단일 유저 조회
 @router.get("/search/{student_id}",response_model=CommonResponse[UserBase])

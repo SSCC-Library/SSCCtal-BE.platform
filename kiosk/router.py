@@ -5,7 +5,7 @@ from new_schemas.response import CommonResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from models.rental import Rental,RentalStatusEnum
-from models.item_copy import ItemCopy
+from models.item_copy import ItemCopy,CopyStatusEnum
 from dependencies import DeletionStatusEnum
 from datetime import datetime, timedelta
 
@@ -22,7 +22,8 @@ def rent_item(
         db.query(ItemCopy)
         .filter(
             ItemCopy.identifier_code == isbn,
-            ItemCopy.delete_status != DeletionStatusEnum.DELETED
+            ItemCopy.delete_status != DeletionStatusEnum.DELETED,
+            ItemCopy.copy_status == CopyStatusEnum.AVAILABLE
         )
         .first()
     )
@@ -51,20 +52,36 @@ def rent_item(
     return CommonResponse(success=True, code=200)
 
 
-@router.post("/rent", response_model=CommonResponse)
+@router.post("/return", response_model=CommonResponse)
 def return_item(
     isbn: str,
     student_id: int,
     db: Session = Depends(get_db)
 ):
-    copy = (
+    # Step 1: item_copy에서 ISBN에 해당하는 copy_id 조회
+    item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == isbn,
+        ItemCopy.copy_status == CopyStatusEnum.AVAILABLE,
+        ItemCopy.delete_status!=DeletionStatusEnum.DELETED).first()
+    if not item_copy:
+        raise HTTPException(status_code=404, detail="해당 ISBN에 대한 복사본이 존재하지 않습니다.")
+
+    # Step 2: rental 테이블에서 해당 copy_id와 student_id로 대여 기록 조회
+    rental = (
         db.query(Rental)
         .filter(
-            Rental.identifier_code == isbn,
-            ItemCopy.delete_status != DeletionStatusEnum.DELETED
+            Rental.copy_id == item_copy.copy_id,
+            Rental.student_id == student_id,
+            Rental.item_return_date == False,
+            Rental.rental_status==RentalStatusEnum.BORROWED
         )
         .first()
     )
+    if not rental:
+        raise HTTPException(status_code=404, detail="해당 학생의 대여 기록이 없습니다.")
 
-    if not copy:
-        return CommonResponse(success=False, code=404, message="대여 가능한 복사본이 없습니다.")
+    # Step 3: 반납 처리
+    #rental.item_return_date = True
+    rental.item_return_date = datetime.utcnow()  # 반납 날짜 기록
+    db.commit()
+
+    return CommonResponse(success=True,code=200)

@@ -35,7 +35,7 @@ def get_items(
             query = query.filter(Item.name.ilike(keyword))
         elif search_type == "hashtag":
             query = query.filter(Item.hashtag.ilike(keyword))
-
+    count=query.count()
     rows = query.offset(offset).limit(size).all()
 
     if not rows:
@@ -57,6 +57,7 @@ def get_items(
         success=True,
         code=200,
         data=data,
+        count=count,
         page=page,
         size=size
     )

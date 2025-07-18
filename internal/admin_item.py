@@ -24,7 +24,7 @@ def get_admin_items(
 
     # JOIN: ItemCopy + Item
     query = db.query(ItemCopy, Item).join(Item, Item.item_id == ItemCopy.item_id)
-
+    
     # Filtering
     if search_type and search_text:
         keyword = f"%{search_text}%"
@@ -34,9 +34,9 @@ def get_admin_items(
             query = query.filter(Item.name.ilike(keyword))
         elif search_type == "hashtag":
             query = query.filter(Item.hashtag.ilike(keyword))
-
+    count=query.count()
     rows = query.offset(offset).limit(size).all()
-
+    
     if not rows:
         return CommonResponse(
             success=False,
@@ -59,6 +59,7 @@ def get_admin_items(
         success=True,
         code=200,
         data=data,
+        count=count,
         page=page,
         size=size
     )

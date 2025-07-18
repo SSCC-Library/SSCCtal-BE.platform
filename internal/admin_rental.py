@@ -36,8 +36,9 @@ def get_admin_rentals(
     if rental_status:
         query = query.filter(Rental.rental_status == rental_status)
 
+    count=query.count()
     rentals = query.offset(offset).limit(size).all()
-
+    
     if not rentals:
         return CommonResponse(success=False, code=404)
 
@@ -62,6 +63,7 @@ def get_admin_rentals(
         success=True,
         code=200,
         data=results,
+        count=count,
         page = page,
         size = size
     )

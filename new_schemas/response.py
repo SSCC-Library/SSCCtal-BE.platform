@@ -16,6 +16,7 @@ class CommonResponse(BaseModel, Generic[T]):
         "from_attributes": True,
         "use_enum_values": True
     }
+    count:Optional[int]=None
     page: Optional[int] = None
     size: Optional[int] = None
 

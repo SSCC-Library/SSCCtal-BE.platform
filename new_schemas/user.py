@@ -29,6 +29,7 @@ class UserMainInfo(BaseModel) :
     major: Optional[str]
     major2: Optional[str]
     minor: Optional[str]
+    user_classification: Optional[UserClassificationEnum]=UserClassificationEnum.STUDENT
 
 class UserSimpleInfo(BaseModel) :
     student_id: int

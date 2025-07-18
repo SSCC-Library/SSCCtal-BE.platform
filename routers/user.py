@@ -27,7 +27,7 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
         .join(Item, ItemCopy.item_id == Item.item_id)
         .filter(Rental.student_id == student_id)
     )
-
+    count=query.count()
     offset = (page - 1) * size
     rentals = query.offset(offset).limit(size).all()
 
@@ -54,6 +54,7 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
         success= True,
         code= 200,
         data= result,
+        count=count,
         page= page,
         size= size
     )
@@ -70,7 +71,7 @@ def read_users(db: Session = Depends(get_db)):
     return users
 
 # 단일 유저 조회
-@router.get("/v1/search")
+@router.get("/search/{student_id}")
 def search_users(
     student_id: Optional[int] = None,
     name: Optional[str] = None,

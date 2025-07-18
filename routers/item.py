@@ -57,7 +57,7 @@ def get_items(
         success=True,
         code=200,
         data=data,
-        count=count,
+        total=count,
         page=page,
         size=size
     )

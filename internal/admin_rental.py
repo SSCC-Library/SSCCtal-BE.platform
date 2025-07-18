@@ -63,7 +63,7 @@ def get_admin_rentals(
         success=True,
         code=200,
         data=results,
-        count=count,
+        total=count,
         page = page,
         size = size
     )

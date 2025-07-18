@@ -60,7 +60,7 @@ def return_item(
 ):
     # Step 1: item_copy에서 ISBN에 해당하는 copy_id 조회
     item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == isbn,
-        ItemCopy.copy_status == CopyStatusEnum.AVAILABLE,
+        ItemCopy.copy_status == CopyStatusEnum.BORROWED,
         ItemCopy.delete_status!=DeletionStatusEnum.DELETED).first()
     if not item_copy:
         raise HTTPException(status_code=404, detail="해당 ISBN에 대한 복사본이 존재하지 않습니다.")
@@ -71,7 +71,6 @@ def return_item(
         .filter(
             Rental.copy_id == item_copy.copy_id,
             Rental.student_id == student_id,
-            Rental.item_return_date == False,
             Rental.rental_status==RentalStatusEnum.BORROWED
         )
         .first()
@@ -82,6 +81,8 @@ def return_item(
     # Step 3: 반납 처리
     #rental.item_return_date = True
     rental.item_return_date = datetime.utcnow()  # 반납 날짜 기록
+    rental.rental_status=RentalStatusEnum.RETURNED
+    item_copy.copy_status=CopyStatusEnum.AVAILABLE
     db.commit()
 
     return CommonResponse(success=True,code=200)

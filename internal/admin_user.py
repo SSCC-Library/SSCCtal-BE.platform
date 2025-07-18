@@ -36,7 +36,7 @@ def get_admin_users(
         return CommonResponse(success=False, code=404)
 
 
-    return CommonResponse(success=True, code=200, data=users,count=count,page = page, size = size)    
+    return CommonResponse(success=True, code=200, data=users,total=count,page = page, size = size)    
 
 # 단일 유저 조회
 @router.get("/search/{student_id}",response_model=CommonResponse[UserBase])

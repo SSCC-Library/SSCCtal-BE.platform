@@ -34,6 +34,7 @@ def get_admin_items(
             query = query.filter(Item.name.ilike(keyword))
         elif search_type == "hashtag":
             query = query.filter(Item.hashtag.ilike(keyword))
+
     count=query.count()
     rows = query.offset(offset).limit(size).all()
     
@@ -41,7 +42,6 @@ def get_admin_items(
         return CommonResponse(
             success=False,
             code=404,
-            data=[],
             page=page,
             size=size
         )

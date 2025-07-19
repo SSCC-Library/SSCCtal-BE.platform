@@ -79,16 +79,17 @@ def return_item(
         return CommonResponse(success=False, code=404)
 
     # Step 3: 반납 처리
-        #rental.item_return_date = True
-    actual_return = datetime.now().date()
-    expected_return = rental.expectation_return_date
+    actual_return = datetime.now().date() # 현재 시간
+    expected_return = rental.expectation_return_date  # 반납 예정일
 
+    #날짜 비교
     if actual_return > expected_return:
         delta = actual_return - expected_return
         rental.overdue = delta.days
+
     rental.item_return_date = datetime.now()
-    rental.rental_status=RentalStatusEnum.RETURNED
-    item_copy.copy_status=CopyStatusEnum.AVAILABLE
+    rental.rental_status=RentalStatusEnum.RETURNED  #rental 상태 수정
+    item_copy.copy_status=CopyStatusEnum.AVAILABLE  #item_copy 테이블 해당 아이템 상태 가능 처리
     db.commit()
 
     return CommonResponse(success=True,code=200)

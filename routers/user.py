@@ -36,8 +36,6 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
     
     result = []
     for rental in rentals:
-       
-
         result.append(RentalMainInfo(
         rental_id=rental.rental_id,
         student_id=rental.student_id,

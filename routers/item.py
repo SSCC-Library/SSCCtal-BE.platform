@@ -30,12 +30,14 @@ def get_items(
     if search_type and search_text:
         keyword = f"%{search_text}%"
         if search_type == "item_id":
+            #item_id str로 변경,  keyword와 일치하는 부분 검색
             query = query.filter(cast(Item.item_id, String).ilike(keyword))
         elif search_type == "name":
-            query = query.filter(Item.name.ilike(keyword))
+            query = query.filter(Item.name.ilike(keyword))  #  keyword와 일치하는 부분 검색
         elif search_type == "hashtag":
-            query = query.filter(Item.hashtag.ilike(keyword))
-    count=query.count()
+            query = query.filter(Item.hashtag.ilike(keyword))  # keyword와 일치하는 부분 검색
+
+    count=query.count()  # 필터에 일치하는 전체 데이터 개수
     rows = query.offset(offset).limit(size).all()
 
     if not rows:

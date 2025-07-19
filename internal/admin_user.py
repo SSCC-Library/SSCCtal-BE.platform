@@ -37,10 +37,9 @@ def get_admin_users(
     if not users:
         return CommonResponse(success=False, code=404, total=0, page=page, size=size)
 
-    # 복호화 적용
     user_list = []
     for user in users:
-        phone = decrypt_phone(user.phone_number)
+        phone = decrypt_phone(user.phone_number)  # 전화번호 복호화
 
         user_list.append(UserMainInfo(
             student_id=user.student_id,
@@ -83,7 +82,7 @@ def search_users(
             success=False,
             code=404
         )
-    decrypted_phone = decrypt_phone(user.phone_number)
+    decrypted_phone = decrypt_phone(user.phone_number)  #전화번호 복호화
     user_data = UserBase(
         id=user.id,
         student_id=user.student_id,
@@ -111,29 +110,15 @@ def search_users(
 @router.post("/create", response_model=CommonResponse)
 def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
-        (User.email == user_data.email) | (User.student_id == user_data.student_id)
+        (User.email == user_data.email) | 
+        (User.student_id == user_data.student_id) | 
+        (User.delete_status != DeletionStatusEnum.DELETED)
     ).first()
     
     if existing_user:
         return CommonResponse(success = False, code= 503)
     user = User(**user_data.model_dump())
-    user.phone_number=encrypt_phone(user.phone_number)  #전화번호 해시
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return CommonResponse(success = True, code= 200)
-
-# 유저 생성 (테스트용)
-@router.post("/create1", response_model=CommonResponse)
-def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(
-        (User.email == user_data.email) | (User.student_id == user_data.student_id)
-    ).first()
-    
-    if existing_user:
-        return CommonResponse(success = False, code= 503)
-    user = User(**user_data.model_dump())
-    user.phone_number = encrypt_phone(user.phone_number)
+    user.phone_number = encrypt_phone(user.phone_number)  #전화번호 암호화
     print(user.phone_number)
     db.add(user)
     db.commit()

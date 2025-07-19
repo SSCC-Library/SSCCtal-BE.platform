@@ -44,7 +44,7 @@ def rent_item(
         update_date=datetime.now(),
         delete_status=DeletionStatusEnum.ACTIVE
     )
-
+    copy.copy_status = CopyStatusEnum.BORROWED
     db.add(rental)
     db.commit()
     db.refresh(rental)
@@ -79,11 +79,14 @@ def return_item(
         return CommonResponse(success=False, code=404)
 
     # Step 3: 반납 처리
-    #rental.item_return_date = True
-    rental.item_return_date = datetime.utcnow()  # 반납 날짜 기록
-    if rental.item_return_date > rental.expectation_return_date :
-        delta = rental.item_return_date-rental.expectation_return_date
+        #rental.item_return_date = True
+    actual_return = datetime.now().date()
+    expected_return = rental.expectation_return_date
+
+    if actual_return > expected_return:
+        delta = actual_return - expected_return
         rental.overdue = delta.days
+    rental.item_return_date = datetime.now()
     rental.rental_status=RentalStatusEnum.RETURNED
     item_copy.copy_status=CopyStatusEnum.AVAILABLE
     db.commit()

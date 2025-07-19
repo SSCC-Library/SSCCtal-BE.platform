@@ -1,17 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from models.rental import Rental
 from models.item import Item
 from models.item_copy import ItemCopy
-from models.user import User
-from models.user import User, UserStatusEnum, DeletionStatusEnum
 from database import get_db
-from schemas.user import UserBase, UserCreate, UserUpdate,PersonalRentalItem,PersonalRentalListResponse
-from dependencies import hash_phone_number
-from security import get_current_user
 from new_schemas.response import CommonResponse
 from new_schemas.rental import RentalMainInfo
+from new_schemas.user import UserMainInfo
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -59,9 +56,25 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
         size= size
     )
 
+'''
 
+@router.post("/create", response_model=CommonResponse)
+def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(
+        (User.email == user_data.email) | (User.student_id == user_data.student_id)
+    ).first()
 
+    if existing_user:
+        return CommonResponse(success=False, code=503, message="이미 존재하는 사용자입니다.")
 
+    user = User(**user_data.model_dump())
+    user.phone_number = encrypt_phone(user.phone_number)  # 🔐 전화번호 암호화
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return CommonResponse(success=True, code=200, message="사용자 생성 완료")
 
 
 # 전체 유저 목록 조회
@@ -70,29 +83,6 @@ def read_users(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
 
-# 단일 유저 조회
-@router.get("/search/{student_id}")
-def search_users(
-    student_id: Optional[int] = None,
-    name: Optional[str] = None,
-    email: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(User).filter(User.user_status != UserStatusEnum.DELETED)
-
-    if student_id:
-        query = query.filter(User.student_id == student_id)
-    if name:
-        query = query.filter(User.name == name)
-    if email:
-        query = query.filter(User.email == email)
-
-    results = query.all()
-
-    if not results:
-        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
-    
-    return results
 
 # 유저 생성 (테스트용)
 @router.post("/v1", response_model=UserBase)
@@ -131,3 +121,4 @@ def delete_user(student_id: int, db: Session = Depends(get_db)):
     user.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()
     return {"success": True, "message": "User logically deleted"}
+'''

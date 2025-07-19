@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
-
+from cryptography.fernet import Fernet
 
 # .env 파일에서 환경변수 불러오기
 load_dotenv()
@@ -31,3 +31,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
         return student_id
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+FERNET_SECRET_KEY=os.environ.get("FERNET_SECRET_KEY")
+
+cipher = Fernet(FERNET_SECRET_KEY)
+
+def encrypt_phone(phone: str) -> str:
+    return cipher.encrypt(phone.encode()).decode()
+
+def decrypt_phone(encrypted: str) -> str:
+    return cipher.decrypt(encrypted.encode()).decode()

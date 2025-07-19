@@ -63,7 +63,7 @@ def return_item(
         ItemCopy.copy_status == CopyStatusEnum.BORROWED,
         ItemCopy.delete_status!=DeletionStatusEnum.DELETED).first()
     if not item_copy:
-        raise HTTPException(status_code=404, detail="해당 ISBN에 대한 복사본이 존재하지 않습니다.")
+        return CommonResponse(success=False, code=404)
 
     # Step 2: rental 테이블에서 해당 copy_id와 student_id로 대여 기록 조회
     rental = (
@@ -76,11 +76,14 @@ def return_item(
         .first()
     )
     if not rental:
-        raise HTTPException(status_code=404, detail="해당 학생의 대여 기록이 없습니다.")
+        return CommonResponse(success=False, code=404)
 
     # Step 3: 반납 처리
     #rental.item_return_date = True
     rental.item_return_date = datetime.utcnow()  # 반납 날짜 기록
+    if rental.item_return_date > rental.expectation_return_date :
+        delta = rental.item_return_date-rental.expectation_return_date
+        rental.overdue = delta.days
     rental.rental_status=RentalStatusEnum.RETURNED
     item_copy.copy_status=CopyStatusEnum.AVAILABLE
     db.commit()

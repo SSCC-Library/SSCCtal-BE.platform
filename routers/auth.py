@@ -39,7 +39,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         return LoginResponse(success=False, code=400)   #비밀번호 불일치
     
     student_id = data.student_id
-    user = db.query(User).filter(User.student_id == data.student_id).first()
+    user = db.query(User).filter(User.student_id == student_id).first()
 
     if not user:
         return LoginResponse(success=False, code=401)   #존재하지 않는 학번

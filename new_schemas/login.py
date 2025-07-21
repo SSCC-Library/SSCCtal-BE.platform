@@ -7,8 +7,6 @@ class LoginRequest(BaseModel):
 
 # 로그인 응답 스키마
 class LoginResponse(BaseModel):
-    success : bool
-    code : int
     token: Optional[str] = None
     name: Optional[str] = None
     student_id : Optional[int] = None

@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User,UserClassificationEnum
-from schemas.login import LoginRequest, LoginResponse
+from new_schemas.login import LoginRequest, LoginResponse
 import httpx
 from security import create_access_token,get_current_user
-from schemas.response import CommonResponse
+from new_schemas.response import CommonResponse
 
 router = APIRouter(prefix="/auth", tags=["admin_auth"])
 

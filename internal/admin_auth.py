@@ -45,7 +45,7 @@ async def saint_auth(student_id: int, password: str) -> str:
         return s_token
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=CommonResponse[LoginResponse])
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     s_token = await saint_auth(data.student_id, data.password)
     if not s_token:
@@ -58,7 +58,8 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         return LoginResponse(success=False, code=401)   #존재하지 않는 학번
 
     token = create_access_token({"student_id": user.student_id})
-    return LoginResponse(success=True, code=200, token=token, name=user.name,student_id=student_id)
+    data=LoginResponse(token=token,name=user.name,student_id=user.student_id)
+    return CommonResponse(success=True, code=200, data=data)
 
 
 @router.post("/api/v1/logout")

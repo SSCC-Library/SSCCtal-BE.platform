@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
+from new_schemas.response import CommonResponse
 from new_schemas.login import LoginRequest, LoginResponse
 import httpx
 from security import create_access_token
@@ -31,18 +32,21 @@ async def saint_auth(student_id: int, password: str) -> str:
         return s_token
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=CommonResponse[LoginResponse])
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     s_token = await saint_auth(data.student_id, data.password)
     if not s_token:
         return LoginResponse(success=False, code=400)   #비밀번호 불일치
+    
     student_id = data.student_id
     user = db.query(User).filter(User.student_id == data.student_id).first()
+
     if not user:
         return LoginResponse(success=False, code=401)   #존재하지 않는 학번
 
     token = create_access_token({"student_id": user.student_id})
-    return LoginResponse(success=True, code=200, token=token, name=user.name,student_id=student_id)
+    data=LoginResponse(token=token,name=user.name,student_id=user.student_id)
+    return CommonResponse(success=True, code=200, data=data)
 
 
 @router.post("/logout")

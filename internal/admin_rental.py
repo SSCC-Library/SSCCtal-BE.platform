@@ -8,6 +8,7 @@ from new_schemas.rental import RentalMainInfo,RentalBase
 from new_schemas.response import CommonResponse, RentalWithUserData
 from models.user import User
 from models.rental import Rental,RentalStatusEnum
+from models.item import Item
 
 
 router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
@@ -40,6 +41,10 @@ def get_admin_rentals(
             query = query.filter(Rental.item_return_date.cast(String).ilike(f"%{search_text}%"))
         elif search_type == "rental_status":
             query = query.filter(Rental.rental_status.ilike(f"%{search_text}%"))
+        elif search_type == "item_type":
+            query = query.filter(Item.type.ilike(f"%{search_text}%"))
+        elif search_type == "item_name":
+            query = query.filter(Item.name.ilike(f"%{search_text}%"))
 
     # 🔍 rental_status 필터링 추가
     if rental_status:

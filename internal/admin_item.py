@@ -1,13 +1,16 @@
 from fastapi import APIRouter,Depends,Query
-from models.item import Item
-from models.item_copy import ItemCopy
+from models.item import Item, ItemTypeEnum
+from models.item_copy import ItemCopy, CopyStatusEnum
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from new_schemas.response import CommonResponse, ItemWithItemCopyData,ListItemWithCopyData
 from new_schemas.item import ItemMainInfo, AdminItemMainInfo
-from new_schemas.item_copy import ItemCopyBase,ItemCopyMainInfo
+from new_schemas.item_copy import ItemCopyBase,ItemCopyMainInfo,CopyStatusEnum
 from sqlalchemy import cast, String
+from dependencies import DeletionStatusEnum
+from services.item_service import fetch_book_info
+from datetime import datetime
 
 router = APIRouter(prefix="/items", tags=["admin_items"])
 
@@ -104,3 +107,68 @@ def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
             item_copy=item_copy_data
         )
     )
+
+
+@router.post("/add",response_model= CommonResponse)
+def add_items(isbn: str, db: Session = Depends(get_db)):
+
+    # 1. 기존 item 조회
+    item = db.query(Item).filter(
+        Item.identifier_code == isbn,
+        Item.delete_status != DeletionStatusEnum.DELETED
+    ).first()
+
+    if item:
+        # 2. 존재할 경우: 수량 +1 증가
+        item.total_count += 1
+        item.available_count += 1
+        item.update_date = datetime.utcnow()
+
+        # 3. 복사본 추가
+        new_copy = ItemCopy(
+            item_id=item.item_id,
+            identifier_code=isbn,
+            copy_status=CopyStatusEnum.AVAILABLE,
+            create_date=datetime.utcnow(),
+            update_date=datetime.utcnow(),
+            delete_status=DeletionStatusEnum.ACTIVE
+        )
+        db.add(new_copy)
+        db.commit()
+        return CommonResponse(success=True, code=200)
+
+    # 4. 존재하지 않을 경우: YES24에서 정보 가져오기
+    info = fetch_book_info(isbn)
+    if not info:
+        raise CommonResponse(success=False,code=404)
+
+    # 5. 새 item 추가
+    new_item = Item(
+        identifier_code=info['identifier_code'],
+        name=info['name'],
+        type=ItemTypeEnum.BOOK,
+        publisher=info['publisher'],
+        publish_date=info['publish_date'],
+        image_url=info['image_url'],
+        total_count=1,
+        available_count=1,
+        create_date=datetime.utcnow(),
+        update_date=datetime.utcnow(),
+        delete_status=DeletionStatusEnum.ACTIVE
+    )
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+
+    # 6. 복사본 추가
+    new_copy = ItemCopy(
+        item_id=new_item.item_id,
+        identifier_code=isbn,
+        copy_status=CopyStatusEnum.AVAILABLE,
+        create_date=datetime.utcnow(),
+        update_date=datetime.utcnow(),
+        delete_status=DeletionStatusEnum.ACTIVE
+    )
+    db.add(new_copy)
+    db.commit()
+    return CommonResponse(success=True, code=200)

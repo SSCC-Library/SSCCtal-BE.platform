@@ -16,7 +16,6 @@ size =12
 @router.get("", response_model=CommonResponse[List[UserMainInfo]])
 def get_admin_users(
     page: int = Query(..., ge=1, description="페이지 번호 (1부터 시작)"),
-    size: int = Query(10, ge=1, le=100, description="페이지 크기"),
     search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
     search_text: Optional[str] = Query(None, description="검색어"),
     db: Session = Depends(get_db)
@@ -46,7 +45,11 @@ def get_admin_users(
             name=user.name,
             email=user.email,
             phone_number=phone,
-            user_status=user.user_status
+            gender=user.gender,
+            major=user.major,
+            major2=user.major2,
+            minor=user.minor,
+            user_classification=user.user_classification
         ))
 
     return CommonResponse(
@@ -111,7 +114,7 @@ def search_users(
 def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
         (User.email == user_data.email) | 
-        (User.student_id == user_data.student_id) | 
+        (User.student_id == user_data.student_id) &
         (User.delete_status != DeletionStatusEnum.DELETED)
     ).first()
     

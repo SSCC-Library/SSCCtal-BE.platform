@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import TypeVar, Generic, Optional
 from new_schemas.user import UserSimpleInfo
-from new_schemas.rental import RentalMainInfo,OverdueResponse
+from new_schemas.rental import RentalMainInfo,OverdueResponse, RentalStatusUpdate
 from new_schemas.item import AdminItemMainInfo,ItemMainInfo
 from new_schemas.item_copy import ItemCopyBase,ItemCopyMainInfo
 
@@ -31,3 +31,6 @@ class ItemWithItemCopyData(BaseModel) :
 class ListItemWithCopyData(BaseModel) :
     item_copy: ItemCopyMainInfo
     item: AdminItemMainInfo
+
+class RentalStatusData(BaseModel) :
+    rental : RentalStatusUpdate

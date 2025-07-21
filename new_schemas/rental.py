@@ -41,3 +41,6 @@ class OverdueResponse(BaseModel):
         "from_attributes": True,
         "use_enum_values": True
     }
+
+class RentalStatusUpdate(BaseModel) :
+    rental_status : RentalStatusEnum

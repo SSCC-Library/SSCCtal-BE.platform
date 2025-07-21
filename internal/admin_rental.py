@@ -5,7 +5,7 @@ from sqlalchemy import String
 from database import get_db
 from new_schemas.user import UserSimpleInfo
 from new_schemas.rental import RentalMainInfo,RentalBase
-from new_schemas.response import CommonResponse, RentalWithUserData
+from new_schemas.response import CommonResponse, RentalWithUserData,RentalStatusUpdate
 from models.user import User
 from models.rental import Rental,RentalStatusEnum
 from models.item import Item
@@ -111,3 +111,19 @@ def update_rental_main_info(
     db.refresh(rental)
 
     return CommonResponse(success=True,code=200)
+
+@router.post("/status/{rental_id}", response_model=CommonResponse)
+def rental_status_info(rental_id: int,
+    rental_status: RentalStatusUpdate,
+    db: Session = Depends(get_db)
+):
+    rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
+
+    if not rental:
+        return CommonResponse(success=False, code=404)
+
+    rental.rental_status = rental_status.rental_status
+    db.commit()
+    db.refresh(rental)
+    print("✅ 변경된 상태:", rental.rental_status)
+    return CommonResponse(success=True, code=200)

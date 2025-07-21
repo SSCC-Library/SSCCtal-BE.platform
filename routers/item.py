@@ -14,7 +14,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 size=12
 
 
-@router.get("", response_model=CommonResponse[list[ListItemWithCopyData]])
+@router.get("list", response_model=CommonResponse[list[ListItemWithCopyData]])
 def get_items(
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),

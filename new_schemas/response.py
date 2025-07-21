@@ -22,6 +22,7 @@ class CommonResponse(BaseModel, Generic[T]):
 
 class RentalWithUserData(BaseModel):
     user: UserSimpleInfo
+    item: ItemMainInfo
     rental: RentalMainInfo
 
 class ItemWithItemCopyData(BaseModel) :

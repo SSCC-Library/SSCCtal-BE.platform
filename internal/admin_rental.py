@@ -3,12 +3,14 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from sqlalchemy import String
 from database import get_db
+from new_schemas.item import ItemMainInfo
 from new_schemas.user import UserSimpleInfo
 from new_schemas.rental import RentalMainInfo,RentalBase
 from new_schemas.response import CommonResponse, RentalWithUserData,RentalStatusUpdate
 from models.user import User
 from models.rental import Rental,RentalStatusEnum
 from models.item import Item
+from models.item_copy import ItemCopy
 
 
 router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
@@ -23,10 +25,12 @@ def get_admin_rentals(
     rental_status: Optional[RentalStatusEnum] = Query(None, description="대여 상태 필터 (borrowed, returned, overdue)"),
     db: Session = Depends(get_db)
 ):
-
     offset = (page - 1) * size
 
-    query = db.query(Rental).join(User, User.student_id == Rental.student_id)
+    query = db.query(Rental) \
+        .join(User, User.student_id == Rental.student_id) \
+        .join(ItemCopy, Rental.copy_id == ItemCopy.copy_id) \
+        .join(Item, ItemCopy.item_id == Item.item_id)
 
     if search_type and search_text:
         if search_type == "rental_id":
@@ -46,13 +50,12 @@ def get_admin_rentals(
         elif search_type == "item_name":
             query = query.filter(Item.name.ilike(f"%{search_text}%"))
 
-    # 🔍 rental_status 필터링 추가
     if rental_status:
         query = query.filter(Rental.rental_status == rental_status)
 
-    count=query.count()
+    count = query.count()
     rentals = query.offset(offset).limit(size).all()
-    
+
     if not rentals:
         return CommonResponse(success=False, code=404)
 
@@ -67,19 +70,26 @@ def get_admin_rentals(
             item_return_date=rental.item_return_date,
             overdue=rental.overdue
         )
+
         user_data = UserSimpleInfo(
             student_id=rental.user.student_id,
             name=rental.user.name
         )
-        results.append(RentalWithUserData(user=user_data, rental=rental_data))
+
+        item_data = ItemMainInfo(
+        name=rental.item_copy.item.name,
+        type=rental.item_copy.item.type
+        )
+
+        results.append(RentalWithUserData(user=user_data, rental=rental_data, item=item_data))
 
     return CommonResponse(
         success=True,
         code=200,
         data=results,
         total=count,
-        page = page,
-        size = size
+        page=page,
+        size=size
     )
 
 #대여 상세 정보 조회

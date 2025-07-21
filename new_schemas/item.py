@@ -23,8 +23,8 @@ class ItemBase(BaseModel):
 class ItemMainInfo(BaseModel) :
     name: str
     type: ItemTypeEnum
-    hashtag: str
-    img_url:str
+    hashtag: Optional[str] = None
+    img_url: Optional[str] = None
     
     model_config = {
         "from_attributes": True,

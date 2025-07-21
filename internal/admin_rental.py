@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import String
 from database import get_db
 from new_schemas.user import UserSimpleInfo
 from new_schemas.rental import RentalMainInfo,RentalBase
@@ -16,7 +17,7 @@ size = 12
 @router.get("", response_model=CommonResponse[List[RentalWithUserData]])
 def get_admin_rentals(
     page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
-    search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
+    search_type: Optional[str] = Query(None, description="검색 기준 rental_id,student_id, name ,item_borrow_date, item_return_date, rental_status"),
     search_text: Optional[str] = Query(None, description="검색어"),
     rental_status: Optional[RentalStatusEnum] = Query(None, description="대여 상태 필터 (borrowed, returned, overdue)"),
     db: Session = Depends(get_db)
@@ -26,11 +27,19 @@ def get_admin_rentals(
 
     query = db.query(Rental).join(User, User.student_id == Rental.student_id)
 
-    if search_type and search_text: 
-        if search_type == "student_id":
+    if search_type and search_text:
+        if search_type == "rental_id":
+            query = query.filter(Rental.rental_id == int(search_text))
+        elif search_type == "student_id":
             query = query.filter(User.student_id == int(search_text))
         elif search_type == "name":
             query = query.filter(User.name.ilike(f"%{search_text}%"))
+        elif search_type == "item_borrow_date":
+            query = query.filter(Rental.item_borrow_date.cast(String).ilike(f"%{search_text}%"))
+        elif search_type == "item_return_date":
+            query = query.filter(Rental.item_return_date.cast(String).ilike(f"%{search_text}%"))
+        elif search_type == "rental_status":
+            query = query.filter(Rental.rental_status.ilike(f"%{search_text}%"))
 
     # 🔍 rental_status 필터링 추가
     if rental_status:

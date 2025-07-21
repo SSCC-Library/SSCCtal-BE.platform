@@ -31,7 +31,7 @@ def get_admin_items(
     # Filtering
     if search_type and search_text:
         keyword = f"%{search_text}%"
-        if search_type == "item_id":
+        if search_type == "copy_id":
             query = query.filter(cast(Item.item_id, String).ilike(keyword))
         elif search_type == "name":
             query = query.filter(Item.name.ilike(keyword))
@@ -53,7 +53,7 @@ def get_admin_items(
     data: List[ListItemWithCopyData] = [
         ListItemWithCopyData(
             item_copy=ItemCopyMainInfo.model_validate(copy),
-            item=ItemMainInfo.model_validate(item)
+            item=AdminItemMainInfo.model_validate(item)
         )
         for copy, item in rows
     ]

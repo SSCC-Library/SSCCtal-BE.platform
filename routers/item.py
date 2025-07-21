@@ -4,7 +4,7 @@ from models.item_copy import ItemCopy
 from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from new_schemas.response import CommonResponse, ListItemWithCopyData
+from new_schemas.response import CommonResponse, ListItemWithCopyData,AdminItemMainInfo
 from new_schemas.item import ItemMainInfo
 from new_schemas.item_copy import ItemCopyMainInfo
 from sqlalchemy import cast, String
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 size=12
 
 
-@router.get("list", response_model=CommonResponse[list[ListItemWithCopyData]])
+@router.get("/list", response_model=CommonResponse[list[ListItemWithCopyData]])
 def get_items(
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
@@ -50,7 +50,7 @@ def get_items(
     data: List[ListItemWithCopyData] = [
         ListItemWithCopyData(
             item_copy=ItemCopyMainInfo.model_validate(copy),
-            item=ItemMainInfo.model_validate(item)
+            item=AdminItemMainInfo.model_validate(item)
         )
         for copy, item in rows
     ]

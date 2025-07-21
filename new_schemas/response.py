@@ -30,4 +30,4 @@ class ItemWithItemCopyData(BaseModel) :
 
 class ListItemWithCopyData(BaseModel) :
     item_copy: ItemCopyMainInfo
-    item: ItemMainInfo
+    item: AdminItemMainInfo

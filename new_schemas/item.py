@@ -24,6 +24,7 @@ class ItemMainInfo(BaseModel) :
     name: str
     type: ItemTypeEnum
     hashtag: str
+    img_url:str
     
     model_config = {
         "from_attributes": True,

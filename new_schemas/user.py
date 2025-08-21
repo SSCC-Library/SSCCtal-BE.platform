@@ -20,6 +20,10 @@ class UserBase(BaseModel):
     user_status: UserStatusEnum
     delete_status: DeletionStatusEnum
 
+    model_config = {
+        "from_attributes": True  #딕셔너리 아닌 객체 속성 읽기 허용
+    }
+
 class UserMainInfo(BaseModel) :
     student_id: int
     name: str

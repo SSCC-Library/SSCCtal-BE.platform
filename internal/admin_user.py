@@ -86,6 +86,7 @@ def search_users(
             code=404
         )
     decrypted_phone = decrypt_phone(user.phone_number)  #전화번호 복호화
+    '''
     user_data = UserBase(
         id=user.id,
         student_id=user.student_id,
@@ -102,7 +103,9 @@ def search_users(
         user_status=user.user_status,
         delete_status=user.delete_status
     )
-
+    '''
+    user_data = UserBase.model_validate(user)  #user 데이터(ORM 객체)를 pydantic 모델로 생성
+    user_data.phone_number = decrypted_phone
     return CommonResponse(
         success=True,
         code=200,

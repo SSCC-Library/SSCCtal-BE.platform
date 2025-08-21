@@ -14,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 size = 12
 
-@router.get("/me/rentals",response_model=CommonResponse[list[RentalMainInfo]])
+@router.get("/items/rental-records",response_model=CommonResponse[list[RentalMainInfo]])
 def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
     student_id : Optional[int] = None, db: Session = Depends(get_db)) :
 

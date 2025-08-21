@@ -11,6 +11,7 @@ from models.user import User
 from models.rental import Rental,RentalStatusEnum
 from models.item import Item
 from models.item_copy import ItemCopy
+from security import get_current_user,get_admin_user
 
 
 router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
@@ -19,12 +20,14 @@ router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
 size = 12
 @router.get("", response_model=CommonResponse[List[RentalWithUserData]])
 def get_admin_rentals(
+    token : str =Depends(get_admin_user),
     page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
     search_type: Optional[str] = Query(None, description="검색 기준 rental_id,student_id, name ,item_borrow_date, item_return_date, rental_status"),
     search_text: Optional[str] = Query(None, description="검색어"),
     rental_status: Optional[RentalStatusEnum] = Query(None, description="대여 상태 필터 (borrowed, returned, overdue)"),
     db: Session = Depends(get_db)
 ):
+    
     offset = (page - 1) * size
 
     query = db.query(Rental) \
@@ -61,6 +64,8 @@ def get_admin_rentals(
 
     results = []
     for rental in rentals:
+        rental_data = RentalMainInfo.model_validate(rental)
+        '''
         rental_data = RentalMainInfo(
             rental_id=rental.rental_id,
             student_id=rental.student_id,
@@ -70,6 +75,7 @@ def get_admin_rentals(
             item_return_date=rental.item_return_date,
             overdue=rental.overdue
         )
+        '''
 
         user_data = UserSimpleInfo(
             student_id=rental.user.student_id,
@@ -92,9 +98,9 @@ def get_admin_rentals(
         size=size
     )
 
-#대여 상세 정보 조회
+# rental 상세 정보 조회
 @router.get("/{rental_id}", response_model=CommonResponse[RentalBase])
-def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
+def get_rental_by_id(rental_id: int, token :str = Depends(get_admin_user), db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     
     if not rental:
@@ -102,11 +108,12 @@ def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
 
     return CommonResponse(success=True,code=200,data=rental)
 
-#대여 기록 수정
+# rental 기록 업데이트
 @router.post("/{rental_id}", response_model=CommonResponse)
 def update_rental_main_info(
     rental_id: int,
     data: RentalMainInfo,
+    token : str =Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
@@ -122,9 +129,11 @@ def update_rental_main_info(
 
     return CommonResponse(success=True,code=200)
 
+# rental 상태 변경
 @router.post("/status/{rental_id}", response_model=CommonResponse)
 def rental_status_info(rental_id: int,
     rental_status: RentalStatusUpdate,
+    token : str =Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
@@ -135,5 +144,5 @@ def rental_status_info(rental_id: int,
     rental.rental_status = rental_status.rental_status
     db.commit()
     db.refresh(rental)
-    print("✅ 변경된 상태:", rental.rental_status)
+    print("변경된 상태:", rental.rental_status)
     return CommonResponse(success=True, code=200)

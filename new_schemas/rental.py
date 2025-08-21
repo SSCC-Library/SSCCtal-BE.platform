@@ -27,6 +27,10 @@ class RentalMainInfo(BaseModel) :
     item_return_date: Optional[datetime]
     overdue: int
 
+    model_config = {
+        "from_attributes": True
+    }
+
 class OverdueResponse(BaseModel):
     rental_id: int
     name: Optional[str] = None        # 책 제목

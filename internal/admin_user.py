@@ -40,17 +40,19 @@ def get_admin_users(
     for user in users:
         phone = decrypt_phone(user.phone_number)  # 전화번호 복호화
 
-        user_list.append(UserMainInfo(
-            student_id=user.student_id,
-            name=user.name,
-            email=user.email,
-            phone_number=phone,
-            gender=user.gender,
-            major=user.major,
-            major2=user.major2,
-            minor=user.minor,
-            user_classification=user.user_classification
-        ))
+        user_list.append(UserMainInfo.model_validate(user)  
+        )
+        '''
+        student_id=user.student_id,
+        name=user.name,
+        email=user.email,
+        phone_number=phone,
+        gender=user.gender,
+        major=user.major,
+        major2=user.major2,
+        minor=user.minor,
+        user_classification=user.user_classification
+        '''
 
     return CommonResponse(
         success=True,
@@ -133,8 +135,6 @@ def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
 
 
 
-
-
 # 유저 정보 업데이트  (기존 데이터를 보여줘야합니다)
 @router.post("/update/{student_id}",response_model=CommonResponse)
 def update_user(student_id: int, update_data: UserMainInfo, db: Session = Depends(get_db)):
@@ -152,7 +152,7 @@ def update_user(student_id: int, update_data: UserMainInfo, db: Session = Depend
     return CommonResponse(success = True, code= 200)
 
 
-# 유저 삭제 (회원탈퇴 처리)
+# 유저 삭제 (회원탈퇴 처리, 실제 삭제 x)
 @router.post("/delete/{student_id}",response_model=CommonResponse)
 def delete_user(student_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,

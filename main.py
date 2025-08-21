@@ -4,7 +4,7 @@ from routers.item import router as item_router
 #from routers.item_copy import router as item_copy_router
 #from routers.rental import router as rental_router
 from routers.user import router as user_router
-from internal.admin_auth import router as admin_auth_router
+from internal.auth import router as admin_auth_router
 from internal.admin_user import router as admin_user_router
 from internal.admin_item import router as admin_item_router
 from internal.admin_rental import router as admin_rental_router
@@ -15,7 +15,8 @@ from database import engine, Base
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+)
 
 
 app.include_router(kiosk_router,prefix="/api/v1")

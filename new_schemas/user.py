@@ -35,6 +35,10 @@ class UserMainInfo(BaseModel) :
     minor: Optional[str]
     user_classification: Optional[UserClassificationEnum]=UserClassificationEnum.STUDENT
 
+    model_config = {
+        "from_attributes": True  #딕셔너리 아닌 객체 속성 읽기 허용
+    }
+
 class UserSimpleInfo(BaseModel) :
     student_id: int
     name: str

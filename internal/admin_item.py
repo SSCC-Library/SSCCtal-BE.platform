@@ -11,6 +11,7 @@ from sqlalchemy import cast, String
 from dependencies import DeletionStatusEnum
 from services.item_service import fetch_book_info
 from datetime import datetime
+from security import get_admin_user
 
 router = APIRouter(prefix="/items", tags=["admin_items"])
 
@@ -18,6 +19,7 @@ size=12
 
 @router.get("", response_model=CommonResponse[List[ListItemWithCopyData]])
 def get_admin_items(
+    token : str =Depends(get_admin_user),
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
     search_text: Optional[str] = Query(None),
@@ -68,7 +70,7 @@ def get_admin_items(
     )
 
 @router.get("/{copy_id}", response_model=CommonResponse[ItemWithItemCopyData])
-def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
+def get_item_copy(copy_id: int, token : str =Depends(get_admin_user),db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
         return CommonResponse(success=False, code=404)
@@ -77,27 +79,9 @@ def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
     if not item:
         return CommonResponse(success=False, code=404)
 
-    item_copy_data = ItemCopyBase(
-        copy_id=copy.copy_id,
-        item_id=copy.item_id,
-        identifier_code=copy.identifier_code,
-        copy_status=copy.copy_status,
-        create_date=copy.create_date,
-        update_date=copy.update_date,
-        delete_status=copy.delete_status
-    )
+    item_copy_data = ItemCopyBase.model_validate(copy)
 
-    item_data = AdminItemMainInfo(
-        item_id=item.item_id,
-        name=item.name,
-        type=item.type,
-        publisher=item.publisher,
-        publish_date=item.publish_date,
-        hashtag=item.hashtag,
-        image_url=item.image_url,
-        total_count=item.total_count,
-        available_count=item.available_count
-    )
+    item_data = AdminItemMainInfo.model_validate(item)
 
     return CommonResponse(
         success=True,
@@ -110,7 +94,7 @@ def get_item_copy(copy_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/add",response_model= CommonResponse)
-def add_items(isbn: str, db: Session = Depends(get_db)):
+def add_items(isbn: str, token : str =Depends(get_admin_user),db: Session = Depends(get_db)):
 
     # 1. 기존 item 조회
     item = db.query(Item).filter(
@@ -172,3 +156,4 @@ def add_items(isbn: str, db: Session = Depends(get_db)):
     db.add(new_copy)
     db.commit()
     return CommonResponse(success=True, code=200)
+

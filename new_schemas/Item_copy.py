@@ -12,6 +12,10 @@ class ItemCopyBase(BaseModel):
     update_date: datetime
     delete_status: DeletionStatusEnum
 
+    model_config = {
+        "from_attributes": True
+    }
+
 class ItemCopyMainInfo(BaseModel) :
     copy_id: int
     item_id: int

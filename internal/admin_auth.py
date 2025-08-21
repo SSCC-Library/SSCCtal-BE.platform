@@ -62,7 +62,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     return CommonResponse(success=True, code=200, data=data)
 
 
-@router.post("/api/v1/logout")
+@router.post("/logout")
 def logout():
     return {
         "success": True,

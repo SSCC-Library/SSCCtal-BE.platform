@@ -6,7 +6,7 @@ from models.item import Item
 from models.item_copy import ItemCopy
 from database import get_db
 from new_schemas.response import CommonResponse
-from new_schemas.rental import RentalMainInfo
+from new_schemas.rental import RentalMainInfo,RentalMainInfoWithItem
 from new_schemas.user import UserMainInfo
 
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 size = 12
 
-@router.get("/items/rental-records",response_model=CommonResponse[list[RentalMainInfo]])
+@router.get("/items/rental-records",response_model=CommonResponse[list[RentalMainInfoWithItem]])
 def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
     student_id : Optional[int] = None, db: Session = Depends(get_db)) :
 
@@ -36,15 +36,10 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
     
     result = []
     for rental in rentals:
-        result.append(RentalMainInfo(
-        rental_id=rental.rental_id,
-        student_id=rental.student_id,
-        rental_status=rental.rental_status,
-        item_borrow_date=rental.item_borrow_date,
-        expectation_return_date=rental.expectation_return_date,
-        item_return_date=rental.item_return_date,
-        overdue=rental.overdue
-))
+        rental_info = RentalMainInfo.model_validate(rental, from_attributes=True)
+        result.append(RentalMainInfoWithItem(rental=rental_info,
+                                             item_name=rental.item_copy.item.name))
+
     return CommonResponse(
         success= True,
         code= 200,

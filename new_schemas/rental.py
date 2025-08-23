@@ -48,3 +48,7 @@ class OverdueResponse(BaseModel):
 
 class RentalStatusUpdate(BaseModel) :
     rental_status : RentalStatusEnum
+
+class RentalMainInfoWithItem(BaseModel):
+    rental: RentalMainInfo
+    item_name: str

@@ -92,9 +92,9 @@ def get_item_copy(copy_id: int, token : str =Depends(get_admin_user),db: Session
         )
     )
 
-
+#, token : str =Depends(get_admin_user)
 @router.post("/add",response_model= CommonResponse)
-def add_items(isbn: str, token : str =Depends(get_admin_user),db: Session = Depends(get_db)):
+def add_items(isbn: str,db: Session = Depends(get_db)):
 
     # 1. 기존 item 조회
     item = db.query(Item).filter(

@@ -13,7 +13,9 @@ router = APIRouter(prefix="/auth", tags=["_auth"])
 async def saint_auth(student_id: int, password: str) -> str:
     url = "https://smartid.ssu.ac.kr/Symtra_sso/smln_pcs.asp"
     headers = {
-        "User-Agent": "",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36",
         "Referer": "https://smartid.ssu.ac.kr/Symtra_sso/smln.asp?apiReturnUrl=https%3A%2F%2Fsaint.ssu.ac.kr%2FwebSSO%2Fsso.jsp",
     }
     data = {
@@ -46,7 +48,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token({"student_id": user.student_id,"user_classification": user.user_classification.value})  # 학번 및 사용자 
 
     data=LoginResponse(token=token,name=user.name,student_id=user.student_id)
-    print(data)
+    print
     return CommonResponse(success=True, code=200, data=data)
 
 

@@ -44,7 +44,9 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         return CommonResponse(success=False, code=401)   #존재하지 않는 학번
 
     token = create_access_token({"student_id": user.student_id,"user_classification": user.user_classification.value})  # 학번 및 사용자 
+
     data=LoginResponse(token=token,name=user.name,student_id=user.student_id)
+    print(data)
     return CommonResponse(success=True, code=200, data=data)
 
 

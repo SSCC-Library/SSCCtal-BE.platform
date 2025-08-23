@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routers.auth import router as auth_router
 from routers.item import router as item_router
 #from routers.item_copy import router as item_copy_router
@@ -18,7 +19,13 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
 )
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 또는 ["*"] (개발 환경에서만)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(kiosk_router,prefix="/api/v1")
 app.include_router(admin_auth_router,prefix="/api/v1")
 app.include_router(admin_item_router,prefix="/api/v1/admin")

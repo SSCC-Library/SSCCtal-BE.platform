@@ -19,7 +19,7 @@ size=12
 
 @router.get("", response_model=CommonResponse[List[ListItemWithCopyData]])
 def get_admin_items(
-
+    token : int =Depends(get_admin_user),
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
     search_text: Optional[str] = Query(None),

@@ -48,7 +48,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     token = create_access_token({"student_id": user.student_id,"user_classification": user.user_classification.value})  # 학번 및 사용자 
 
     data=LoginResponse(token=token,name=user.name,student_id=user.student_id)
-    print
+ 
     return CommonResponse(success=True, code=200, data=data)
 
 

@@ -24,7 +24,7 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
         .join(Item, ItemCopy.item_id == Item.item_id)
         .filter(Rental.student_id == student_id)
     )
-    total=query.count()
+    count=query.count()
     offset = (page - 1) * size
     rentals = query.offset(offset).limit(size).all()
 
@@ -44,7 +44,7 @@ def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1�
         success= True,
         code= 200,
         data= result,
-        count=total,
+        total=count,
         page= page,
         size= size
     )

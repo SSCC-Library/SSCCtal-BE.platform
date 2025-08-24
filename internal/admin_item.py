@@ -19,7 +19,7 @@ size=12
 
 @router.get("", response_model=CommonResponse[List[ListItemWithCopyData]])
 def get_admin_items(
-    token : str =Depends(get_admin_user),
+
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
     search_text: Optional[str] = Query(None),
@@ -70,7 +70,7 @@ def get_admin_items(
     )
 
 @router.get("/{copy_id}", response_model=CommonResponse[ItemWithItemCopyData])
-def get_item_copy(copy_id: int, token : str =Depends(get_admin_user),db: Session = Depends(get_db)):
+def get_item_copy(copy_id: int,db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
         return CommonResponse(success=False, code=404)

@@ -113,7 +113,7 @@ def get_rental_by_id(rental_id: int, db: Session = Depends(get_db)):
 def update_rental_main_info(
     rental_id: int,
     data: RentalMainInfo,
-    token : str =Depends(get_admin_user),
+
     db: Session = Depends(get_db)
 ):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()

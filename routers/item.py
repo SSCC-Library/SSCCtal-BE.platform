@@ -5,9 +5,10 @@ from database import get_db
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from new_schemas.response import CommonResponse, ListItemWithCopyData,AdminItemMainInfo
-from new_schemas.item import ItemMainInfo
 from new_schemas.item_copy import ItemCopyMainInfo
 from sqlalchemy import cast, String
+from security import get_current_user
+
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -17,6 +18,7 @@ size=12
 @router.get("/list", response_model=CommonResponse[list[ListItemWithCopyData]])
 def get_items(
     page: int = Query(1, ge=1),
+    token: int =Depends(get_current_user),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
     search_text: Optional[str] = Query(None),
     db: Session = Depends(get_db)

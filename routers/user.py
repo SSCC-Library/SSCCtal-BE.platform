@@ -7,7 +7,7 @@ from models.item_copy import ItemCopy
 from database import get_db
 from new_schemas.response import CommonResponse
 from new_schemas.rental import RentalMainInfo,RentalMainInfoWithItem
-from new_schemas.user import UserMainInfo
+from security import get_current_user
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -16,8 +16,8 @@ size = 12
 
 @router.get("/items/rental-records",response_model=CommonResponse[list[RentalMainInfoWithItem]])
 def get_my_rentals(page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
-    student_id : Optional[int] = None, db: Session = Depends(get_db)) :
-
+    student_id : Optional[int] = None, token: int =Depends(get_current_user),db: Session = Depends(get_db)) :
+    token: int =Depends(get_current_user)
     query = (
         db.query(Rental)
         .join(ItemCopy, Rental.copy_id == ItemCopy.copy_id)

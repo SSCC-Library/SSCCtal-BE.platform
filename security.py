@@ -32,10 +32,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
         student_id = payload.get("student_id")
         user_classification: str = payload.get("user_classification")
 
+
+
         if student_id is None:
             raise HTTPException(status_code=401, detail="토큰이 유효하지 않습니다.")
         
-        if user_classification not in ("STAFF", "STUDENT"):
+        if user_classification != "STAFF" or user_classification != "STUDENT":
             raise HTTPException(status_code=403, detail="권한이 없습니다.")
         
         return student_id

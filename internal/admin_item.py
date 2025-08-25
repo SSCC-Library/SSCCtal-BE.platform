@@ -70,7 +70,7 @@ def get_admin_items(
     )
 
 @router.get("/{copy_id}", response_model=CommonResponse[ItemWithItemCopyData])
-def get_item_copy(copy_id: int,db: Session = Depends(get_db)):
+def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
         return CommonResponse(success=False, code=404)
@@ -94,7 +94,7 @@ def get_item_copy(copy_id: int,db: Session = Depends(get_db)):
 
 #, token : str =Depends(get_admin_user)
 @router.post("/add",response_model= CommonResponse)
-def add_items(isbn: str,db: Session = Depends(get_db)):
+def add_items(isbn: str,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
 
     # 1. 기존 item 조회
     item = db.query(Item).filter(

@@ -41,9 +41,7 @@ def get_admin_users(
     for user in users:
         phone = decrypt_phone(user.phone_number)  # 전화번호 복호화
 
-        user_list.append(UserMainInfo.model_validate(user)  
-        )
-        '''
+        user_list.append(UserMainInfo(
         student_id=user.student_id,
         name=user.name,
         email=user.email,
@@ -52,8 +50,8 @@ def get_admin_users(
         major=user.major,
         major2=user.major2,
         minor=user.minor,
-        user_classification=user.user_classification
-        '''
+        user_classification=user.user_classification))
+        
 
     return CommonResponse(
         success=True,

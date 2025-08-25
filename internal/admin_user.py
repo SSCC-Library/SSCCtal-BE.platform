@@ -164,3 +164,19 @@ def delete_user(student_id: int, db: Session = Depends(get_db)):
     user.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()
     return CommonResponse(success = True, code= 200)
+
+
+@router.post("/update123/{student_id}",response_model=CommonResponse)
+def update_user(student_id: int, update_data: UserMainInfo,db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.student_id == student_id,
+        User.user_status != UserStatusEnum.DELETED
+        ).first()
+    if not user:
+        return CommonResponse(success = False, code= 503)
+
+    for field, value in update_data.dict(exclude_unset=True).items():
+        setattr(user, field, value)
+    user.phone_number=encrypt_phone(user.phone_number)  #전화번호 해시
+    db.commit()
+    db.refresh(user)
+    return CommonResponse(success = True, code= 200)

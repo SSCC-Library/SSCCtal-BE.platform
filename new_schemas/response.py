@@ -28,6 +28,9 @@ class RentalWithUserData(BaseModel):
 class ItemWithItemCopyData(BaseModel) :
     item_copy : ItemCopyBase
     item : AdminItemMainInfo
+    model_config = {
+        "from_attributes": True
+    }
 
 class ListItemWithCopyData(BaseModel) :
     item_copy: ItemCopyMainInfo

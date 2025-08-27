@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from models.item_copy import CopyStatusEnum
 from dependencies import DeletionStatusEnum
@@ -12,10 +12,8 @@ class ItemCopyBase(BaseModel):
     update_date: datetime
     delete_status: DeletionStatusEnum
 
-    model_config = {
-        "from_attributes": True
-    }
-
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
+    
 class ItemCopyMainInfo(BaseModel) :
     copy_id: int
     item_id: int

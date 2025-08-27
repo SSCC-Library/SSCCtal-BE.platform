@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime, date
 from models.item import ItemTypeEnum
@@ -42,7 +42,4 @@ class AdminItemMainInfo(BaseModel) :
     total_count: int
     available_count: int
 
-    model_config = {
-        "from_attributes": True,
-        "use_enum_values": True
-    }
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)

@@ -85,9 +85,27 @@ def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Session 
     if not item:
         return CommonResponse(success=False, code=404)
 
-    item_copy_data = ItemCopyBase.model_validate(copy)
+    item_copy_data = ItemCopyBase(
+        copy_id=copy.copy_id,
+        item_id=copy.item_id,
+        identifier_code=copy.identifier_code,
+        copy_status=copy.copy_status,
+        create_date=copy.create_date,
+        update_date=copy.update_date,
+        delete_status=copy.delete_status
+    )
 
-    item_data = AdminItemMainInfo.model_validate(item)
+    item_data = AdminItemMainInfo(
+        item_id=item.item_id,
+        name=item.name,
+        type=item.type,
+        publisher=item.publisher,
+        publish_date=item.publish_date,
+        hashtag=item.hashtag,
+        image_url=item.image_url,
+        total_count=item.total_count,
+        available_count=item.available_count,
+    )
 
     return CommonResponse(
         success=True,

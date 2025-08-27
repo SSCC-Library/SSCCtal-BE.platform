@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from sqlalchemy import String
+from sqlalchemy import String,cast
 from database import get_db
 from new_schemas.item import ItemMainInfo
 from new_schemas.user import UserSimpleInfo
@@ -52,6 +52,9 @@ def get_admin_rentals(
             query = query.filter(Item.type.ilike(f"%{search_text}%"))
         elif search_type == "name":
             query = query.filter(Item.name.ilike(f"%{search_text}%"))
+        elif search_type == "overdue" :
+            query = query.filter(cast(Rental.overdue,String).ilike(f"%{search_text}%"))
+
 
     if rental_status:
         query = query.filter(Rental.rental_status == rental_status)

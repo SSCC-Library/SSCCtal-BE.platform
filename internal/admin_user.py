@@ -30,6 +30,19 @@ def get_admin_users(
             query = query.filter(User.student_id == int(search_text))
         elif search_type == "name":
             query = query.filter(User.name.ilike(f"%{search_text}%"))
+        elif search_type == "email":
+            query = query.filter(User.email.ilike(f"%{search_text}%"))
+        elif search_type == "gender":
+            query = query.filter(User.gender.ilike(f"%{search_text}%"))
+        elif search_type == "major":
+            query = query.filter(User.major.ilike(f"%{search_text}%"))
+        elif search_type == "major2":
+            query = query.filter(User.major2.ilike(f"%{search_text}%"))
+        elif search_type == "minor":
+            query = query.filter(User.minor.ilike(f"%{search_text}%"))
+        elif search_type == "user_classification":
+            query = query.filter(User.user_classification.ilike(f"%{search_text}%"))
+        
 
     total = query.count()
     users = query.offset(offset).limit(size).all()

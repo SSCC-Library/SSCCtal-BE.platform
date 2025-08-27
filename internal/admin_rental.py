@@ -40,7 +40,7 @@ def get_admin_rentals(
             query = query.filter(Rental.rental_id == int(search_text))
         elif search_type == "student_id":
             query = query.filter(User.student_id == int(search_text))
-        elif search_type == "name":
+        elif search_type == "user_name":
             query = query.filter(User.name.ilike(f"%{search_text}%"))
         elif search_type == "item_borrow_date":
             query = query.filter(Rental.item_borrow_date.cast(String).ilike(f"%{search_text}%"))
@@ -48,9 +48,9 @@ def get_admin_rentals(
             query = query.filter(Rental.item_return_date.cast(String).ilike(f"%{search_text}%"))
         elif search_type == "rental_status":
             query = query.filter(Rental.rental_status.ilike(f"%{search_text}%"))
-        elif search_type == "item_type":
+        elif search_type == "type":
             query = query.filter(Item.type.ilike(f"%{search_text}%"))
-        elif search_type == "item_name":
+        elif search_type == "name":
             query = query.filter(Item.name.ilike(f"%{search_text}%"))
 
     if rental_status:

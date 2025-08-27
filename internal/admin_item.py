@@ -21,7 +21,7 @@ size=12
 def get_admin_items(
     token : int =Depends(get_admin_user),
     page: int = Query(1, ge=1),
-    search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),
+    search_type: Optional[str] = Query(None, description="검색 기준 (copy_id, name, hashtag)"),
     search_text: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
@@ -34,11 +34,17 @@ def get_admin_items(
     if search_type and search_text:
         keyword = f"%{search_text}%"
         if search_type == "copy_id":
-            query = query.filter(cast(Item.item_id, String).ilike(keyword))
+            query = query.filter(cast(Item.item_id, String).ilike(keyword))  #cast : 문자열을 숫자로 바꿈
         elif search_type == "name":
             query = query.filter(Item.name.ilike(keyword))
         elif search_type == "hashtag":
             query = query.filter(Item.hashtag.ilike(keyword))
+        elif search_type == "identifier_code" :
+            query = query.filter(ItemCopy.identifier_code.ilike(keyword))
+        elif search_type == "copy_status" :
+            query = query.filter(ItemCopy.copy_status.ilike(keyword))
+        elif search_type == "type" :
+            query = query.filter(Item.type.ilike(keyword))
 
     count=query.count()
     rows = query.offset(offset).limit(size).all()

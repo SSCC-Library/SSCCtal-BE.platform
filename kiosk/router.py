@@ -160,9 +160,7 @@ async def check_item(isbn: str, student_id : str = Depends(get_current_user),db:
     item_obj = db.query(Item).filter(Item.item_id == item_copy_obj.item_id).first()
     if not item_obj:
         raise HTTPException(status_code=404, detail="해당 아이템 정보가 없습니다.")
-    print("isbn:", isbn)
-    print("item_copy_obj:", item_copy_obj)
-    print("item_obj:", item_obj)
+
     item = ItemMainInfo.model_validate(item_obj)
     item_copy = ItemCopyMainInfo.model_validate(item_copy_obj)
 

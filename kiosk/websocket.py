@@ -17,7 +17,7 @@ except Exception:
 from pyzbar.pyzbar import decode as zbar_decode
 from PIL import Image
 
-router = APIRouter(prefix="websocket",tags=["ws"])
+router = APIRouter(prefix="/websocket",tags=["ws"])
 
 # -------------------------
 # 글로벌 상태 (단일 ESP32 가정)

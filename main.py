@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 app.include_router(kiosk_router,prefix="/api/v1")
-#app.include_router(ws_router,prefix="/api/v1")
+app.include_router(ws_router,prefix="/api/v1")
 app.include_router(admin_auth_router,prefix="/api/v1")
 app.include_router(admin_item_router,prefix="/api/v1/admin")
 app.include_router(admin_user_router,prefix="/api/v1/admin")

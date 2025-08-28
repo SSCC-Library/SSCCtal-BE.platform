@@ -131,7 +131,7 @@ def reset_scan_state():
 # -------------------------
 # 0️⃣ FE ↔ BE: /ws/web
 # -------------------------
-@app.websocket("/ws/web")
+@router.websocket("/ws/web")
 async def ws_web(websocket: WebSocket):
     """FE 제어 채널: {type:'start'|'stop'} 전송, 결과/상태/인식 결과 수신"""
     global started_waiter, scan_deadline
@@ -204,7 +204,7 @@ async def ws_web(websocket: WebSocket):
 # -------------------------
 # 1️⃣ BE ↔ ESP32: /ws/esp32  (텍스트만: "ready"|"started"|"stopped")
 # -------------------------
-@app.websocket("/ws/esp32")
+@router.websocket("/ws/esp32")
 async def ws_esp32_ctrl(websocket: WebSocket, client_id: str = "esp32_001"):
     """ESP32 컨트롤 채널 (텍스트 'start'/'stop'만 사용)"""
     global esp32_ctrl_ws, started_waiter
@@ -233,7 +233,7 @@ async def ws_esp32_ctrl(websocket: WebSocket, client_id: str = "esp32_001"):
 # -------------------------
 # 2️⃣ ESP32 → BE: /ws/esp32/video (바이너리 프레임)
 # -------------------------
-@app.websocket("/ws/esp32/video")
+@router.websocket("/ws/esp32/video")
 async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001"):
     """ESP32 비디오 채널(바이너리 JPEG), 약 33fps"""
     global latest_frame, barcode_found, scan_deadline, scanning
@@ -293,7 +293,7 @@ async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001"):
 # -------------------------
 # 추가) 시청자: /ws/stream  (프레임만 받고 싶은 FE가 구독)
 # -------------------------
-@app.websocket("/ws/stream")
+@router.websocket("/ws/stream")
 async def ws_stream_view(websocket: WebSocket):
     await websocket.accept()
     viewers.add(websocket)
@@ -303,9 +303,3 @@ async def ws_stream_view(websocket: WebSocket):
     except WebSocketDisconnect:
         viewers.discard(websocket)
 
-# -------------------------
-# 테스트용 간단 FE
-# -------------------------
-@app.get("/", response_class=HTMLResponse)
-def index():
-    return

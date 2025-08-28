@@ -268,6 +268,7 @@ async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001",db :
                                         await broadcast_json_to_web({
                                             "status": "recognized", "code": 200, **item
                                         })
+                                        print(item)
                                     else:
                                         # 성공 but 물품 없음 (404)
                                         await broadcast_json_to_web({"status": "not_found", "code": 404})

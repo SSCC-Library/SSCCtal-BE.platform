@@ -7,6 +7,7 @@ from models.item import Item
 from models.item_copy import ItemCopy
 from sqlalchemy.orm import Session
 from database import get_db
+from
 
 # --- 바코드 인식 (OpenCV는 선택, pyzbar+PIL만으로도 동작) ---
 try:
@@ -91,7 +92,7 @@ def decode_barcode_from_jpeg(jpeg: bytes) -> Optional[str]:
     except Exception:
         return None
 
-async def lookup_item(barcode: str, db: Session = Depends(get_db)) -> Optional[dict]:
+async def lookup_item(barcode: str, db: Session) -> Optional[dict]:
     """길이 13이면 ISBN, 아니면 item_id로 조회"""
     try:
         if len(barcode) == 13:
@@ -235,7 +236,7 @@ async def ws_esp32_ctrl(websocket: WebSocket, client_id: str = "esp32_001"):
 # 2️⃣ ESP32 → BE: /ws/esp32/video (바이너리 프레임)
 # -------------------------
 @router.websocket("/ws/esp32/video")
-async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001"):
+async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001",db : Session = Depends(get_db)):
     """ESP32 비디오 채널(바이너리 JPEG), 약 33fps"""
     global latest_frame, barcode_found, scan_deadline, scanning
     await websocket.accept()
@@ -261,7 +262,7 @@ async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001"):
                                 if code:
                                     barcode_found = code
                                     # 결과 조회
-                                    item = await lookup_item(code)
+                                    item = await lookup_item(code, db)
                                     if item:
                                         # 성공 + 물품 존재 (200)
                                         await broadcast_json_to_web({

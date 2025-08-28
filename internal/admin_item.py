@@ -118,7 +118,7 @@ async def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Se
 
 #, token : str =Depends(get_admin_user)
 @router.post("/add",response_model= CommonResponse)
-async def add_items(isbn: str,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
+async def add_items(isbn: str,db: Session = Depends(get_db)):
 
     # 1. 기존 item 조회
     item = db.query(Item).filter(

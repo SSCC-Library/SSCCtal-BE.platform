@@ -151,7 +151,7 @@ async def return_item(
 
     return CommonResponse(success=True,code=200)
 
-@router.post("/input",response_model=CommonResponse)
+@router.post("/input",response_model=CommonResponse[KioskData])
 async def check_item(isbn: str, student_id : str = Depends(get_current_user),db: Session = Depends(get_db)):
     item_copy_obj = db.query(ItemCopy).filter(ItemCopy.identifier_code == isbn).first()
     if not item_copy_obj:

@@ -176,6 +176,7 @@ async def delete_user(student_id: int, db: Session = Depends(get_db)):
     
     user.delete_status = DeletionStatusEnum.DELETED.value
     db.commit()
+    db.refresh(user)
     return CommonResponse(success = True, code= 200)
 
 

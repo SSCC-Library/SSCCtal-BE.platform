@@ -144,40 +144,40 @@ async def add_items(isbn: str,token : int =Depends(get_admin_user),db: Session =
         db.add(new_copy)
         db.commit()
         return CommonResponse(success=True, code=200)
-
+    else :
     # 4. 존재하지 않을 경우: YES24에서 정보 가져오기
-    info = fetch_book_info(isbn)
-    if not info:
-        raise CommonResponse(success=False,code=404)
+        info = fetch_book_info(isbn)
+        if not info:
+            raise CommonResponse(success=False,code=404)
 
-    # 5. 새 item 추가
-    new_item = Item(
-        identifier_code=info['identifier_code'],
-        name=info['name'],
-        type=ItemTypeEnum.BOOK,
-        publisher=info['publisher'],
-        publish_date=info['publish_date'],
-        image_url=info['image_url'],
-        total_count=1,
-        available_count=1,
-        create_date=datetime.utcnow(),
-        update_date=datetime.utcnow(),
-        delete_status=DeletionStatusEnum.ACTIVE
-    )
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
+        # 5. 새 item 추가
+        new_item = Item(
+            identifier_code=info['identifier_code'],
+            name=info['name'],
+            type=ItemTypeEnum.BOOK,
+            publisher=info['publisher'],
+            publish_date=info['publish_date'],
+            image_url=info['image_url'],
+            total_count=1,
+            available_count=1,
+            create_date=datetime.utcnow(),
+            update_date=datetime.utcnow(),
+            delete_status=DeletionStatusEnum.ACTIVE
+        )
+        db.add(new_item)
+        db.commit()
+        db.refresh(new_item)
 
-    # 6. 복사본 추가
-    new_copy = ItemCopy(
-        item_id=new_item.item_id,
-        identifier_code=isbn,
-        copy_status=CopyStatusEnum.AVAILABLE,
-        create_date=datetime.utcnow(),
-        update_date=datetime.utcnow(),
-        delete_status=DeletionStatusEnum.ACTIVE
-    )
-    db.add(new_copy)
-    db.commit()
+        # 6. 복사본 추가
+        new_copy = ItemCopy(
+            item_id=new_item.item_id,
+            identifier_code=isbn,
+            copy_status=CopyStatusEnum.AVAILABLE,
+            create_date=datetime.utcnow(),
+            update_date=datetime.utcnow(),
+            delete_status=DeletionStatusEnum.ACTIVE
+        )
+        db.add(new_copy)
+        db.commit()
     return CommonResponse(success=True, code=200)
 

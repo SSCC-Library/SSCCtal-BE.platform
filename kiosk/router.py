@@ -1,14 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
-from new_schemas.response import CommonResponse
+from new_schemas.response import CommonResponse,KioskData
 from sqlalchemy.orm import Session
 from database import get_db
 from models.rental import Rental,RentalStatusEnum
 from models.item_copy import ItemCopy,CopyStatusEnum
 from models.user import User
+from models.item import Item
 from dependencies import DeletionStatusEnum
 from datetime import datetime, timedelta
-from new_schemas.login import LoginResponse, LoginRequest 
+from new_schemas.login import LoginResponse, LoginRequest
+from new_schemas.item import ItemMainInfo
+from new_schemas.item_copy import ItemCopyMainInfo
 import httpx
 from security import create_access_token,get_current_user
 
@@ -148,3 +151,20 @@ def return_item(
 
     return CommonResponse(success=True,code=200)
 
+@router.get("/input",response_model=CommonResponse)
+def check_item(isbn: str,  db: Session = Depends(get_db)):
+    item_copy_obj = db.query(ItemCopy).filter(ItemCopy.identifier_code == isbn).first()
+    if not item_copy_obj:
+        raise HTTPException(status_code=404, detail="해당 ISBN의 사본이 없습니다.")
+    
+    item_obj = db.query(Item).filter(Item.item_id == item_copy_obj.item_id).first()
+    if not item_obj:
+        raise HTTPException(status_code=404, detail="해당 아이템 정보가 없습니다.")
+    
+    item = ItemMainInfo.model_validate(item_obj)
+    item_copy = ItemCopyMainInfo.model_validate(item_copy_obj)
+
+    data = KioskData(item=item, item_copy=item_copy)
+
+    return CommonResponse(success=True, code=200, data=data)
+    

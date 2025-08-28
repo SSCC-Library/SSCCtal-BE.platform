@@ -36,5 +36,9 @@ class ListItemWithCopyData(BaseModel) :
     item_copy: ItemCopyMainInfo
     item: AdminItemMainInfo
 
+class KioskData(BaseModel) :
+    item : ItemMainInfo
+    item_copy : ItemCopyMainInfo
+
 class RentalStatusData(BaseModel) :
     rental : RentalStatusUpdate

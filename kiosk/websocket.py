@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, APIRouter
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, APIRouter, Depends
 from fastapi.responses import HTMLResponse
 import asyncio, time, json
 from typing import Optional, Set
@@ -6,6 +6,7 @@ from io import BytesIO
 from models.item import Item
 from models.item_copy import ItemCopy
 from sqlalchemy.orm import Session
+from database import get_db
 
 # --- 바코드 인식 (OpenCV는 선택, pyzbar+PIL만으로도 동작) ---
 try:
@@ -90,7 +91,7 @@ def decode_barcode_from_jpeg(jpeg: bytes) -> Optional[str]:
     except Exception:
         return None
 
-async def lookup_item(barcode: str, db: Session) -> Optional[dict]:
+async def lookup_item(barcode: str, db: Session = Depends(get_db)) -> Optional[dict]:
     """길이 13이면 ISBN, 아니면 item_id로 조회"""
     try:
         if len(barcode) == 13:

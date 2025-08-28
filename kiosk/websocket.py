@@ -99,16 +99,11 @@ async def lookup_item(barcode: str, db: Session) -> Optional[dict]:
             # ISBN → ItemCopy → Item
             item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == barcode).first()
             if item_copy:
-                    return {
-                        "identifier_code": item_copy.identifier_code,
-                    }
+                    return item_copy.identifier_code
         else:
             item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == barcode).first()
             if item_copy:
-                    return {
-                        "identifier_code": item_copy.identifier_code,
-                    }
-
+                    return item_copy.identifier_code
     except Exception as e:
         print("lookup_item 에러:", e)
 

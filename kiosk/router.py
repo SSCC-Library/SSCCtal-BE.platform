@@ -91,7 +91,7 @@ async def rent_item(
 
     item = db.query(Item).filter(Item.item_id == copy.item_id).first()
     item.available_count -=1
-    
+
     # 2. 대여 등록
     rental = Rental(
         student_id=student_id,
@@ -138,7 +138,9 @@ async def return_item(
     )
     if not rental:
         return CommonResponse(success=False, code=404)
-
+     
+    item = db.query(Item).filter(Item.item_id == item_copy.item_id).first()
+    item.available_count+=1
     # Step 3: 반납 처리
     actual_return = datetime.now().date() # 현재 시간
     expected_return = rental.expectation_return_date  # 반납 예정일

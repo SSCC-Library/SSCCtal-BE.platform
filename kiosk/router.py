@@ -69,7 +69,7 @@ def logout():
     }
 
 
-@router.post("/rent", response_model=CommonResponse)
+@router.post("/rent/{isbn}", response_model=CommonResponse)
 async def rent_item(
     isbn: str,
     student_id: int = Depends(get_current_user),
@@ -109,7 +109,7 @@ async def rent_item(
     return CommonResponse(success=True, code=200)
 
 
-@router.post("/return", response_model=CommonResponse)
+@router.post("/return/{isbn}", response_model=CommonResponse)
 async def return_item(
     isbn: str,
     student_id: int = Depends(get_current_user),

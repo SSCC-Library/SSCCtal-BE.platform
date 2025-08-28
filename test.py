@@ -1,210 +1,311 @@
-# import cv2
-# from pyzbar.pyzbar import decode
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+import asyncio, time, json
+from typing import Optional, Set
+from io import BytesIO
+from models.item import Item
+from models.item_copy import ItemCopy
+from sqlalchemy.orm import Session
 
-# cap = cv2.VideoCapture(0)  # 기본 카메라 사용
+# --- 바코드 인식 (OpenCV는 선택, pyzbar+PIL만으로도 동작) ---
+try:
+    import cv2  # 선택적
+    _HAS_CV2 = True
+except Exception:
+    _HAS_CV2 = False
 
-# print("QR/바코드 인식 대기 중... (창에서 'q'를 누르면 종료)")
+from pyzbar.pyzbar import decode as zbar_decode
+from PIL import Image
 
-# while True:
-#     ret, frame = cap.read()
-#     if not ret:
-#         print("카메라 읽기 실패")
-#         break
+app = FastAPI()
 
-#     barcodes = decode(frame)
-#     for barcode in barcodes:
-#         data = barcode.data.decode('utf-8')
-#         barcode_type = barcode.type  # QR Code, CODE128, EAN13 등
+# -------------------------
+# 글로벌 상태 (단일 ESP32 가정)
+# -------------------------
+esp32_ctrl_ws: Optional[WebSocket] = None     # ESP32 컨트롤 소켓
+esp32_video_ws: Optional[WebSocket] = None    # ESP32 비디오 소켓
+web_clients: Set[WebSocket] = set()           # FE (/ws/web) 소켓들
+viewers: Set[WebSocket] = set()               # 스트림 뷰어 (/ws/stream) 소켓들
 
-#         print(f"[{barcode_type} 인식됨] ▶ {data}")
+latest_frame: Optional[bytes] = None
 
-#         # 사각형 그리기
-#         x, y, w, h = barcode.rect
-#         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
+# start→started 3초 대기용
+started_waiter: Optional[asyncio.Future] = None
+# 바코드 스캔 윈도우 10초 타이머/상태
+scan_deadline: float = 0.0
+barcode_found: Optional[str] = None
+scanning: bool = False
 
-#         # 인식된 텍스트 보여주기
-#         cv2.putText(frame, f"{barcode_type}: {data}", (x, y - 10),
-#                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (50, 255, 50), 2)
-
-#     cv2.imshow("QR/Barcode Scanner", frame)
-
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-
-# cap.release()
-# cv2.destroyAllWindows()
-
-
-import time
-import re
-start = time.time()
-import requests
-from bs4 import BeautifulSoup
-import datetime
-ISBN13 = ["9788931551167"]#, "9791169210911", "9791169213608", "9791169212151", "9791169212144", "9791169212137", "9791169211901"]
+LOCK = asyncio.Lock()
 
 
+# -------------------------
+# 유틸
+# -------------------------
+async def send_json(ws: WebSocket, payload: dict):
+    await ws.send_text(json.dumps(payload, ensure_ascii=False))
 
+async def broadcast_json_to_web(payload: dict):
+    dead = []
+    msg = json.dumps(payload, ensure_ascii=False)
+    for w in list(web_clients):
+        try:
+            await w.send_text(msg)
+        except Exception:
+            dead.append(w)
+    for w in dead:
+        web_clients.discard(w)
 
-# ISBN13 = ""
+async def broadcast_frame(frame: bytes):
+    dead = []
+    for v in list(viewers):
+        try:
+            await v.send_bytes(frame)
+        except Exception:
+            dead.append(v)
+    for v in dead:
+        viewers.discard(v)
 
-# while True:
-#     ret, frame = cap.read()
-#     if not ret:
-#         print("카메라 읽기 실패")
-#         break
-
-#     barcodes = decode(frame)
-#     for barcode in barcodes:
-#         data = barcode.data.decode('utf-8')
-#         barcode_type = barcode.type  # QR Code, CODE128, EAN13 등
-
-#         print(f"[{barcode_type} 인식됨] ▶ {data}")
-#         ISBN13 = data
-
-#         # 사각형 그리기
-#         x, y, w, h = barcode.rect
-#         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-#         # 인식된 텍스트 보여주기
-#         cv2.putText(frame, f"{barcode_type}: {data}", (x, y - 10),
-#                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (50, 255, 50), 2)
-
-#     cv2.imshow("QR/Barcode Scanner", frame)
-
-#     if cv2.waitKey(1) & 0xFF == ord('q') or ISBN13 != "":
-#         break
-
-# cap.release()
-# cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
-'''
-# start = time.time()
-for isbn in ISBN13:
-    print(f"/n📕 ISBN 검색: {isbn}")
-
+def decode_barcode_from_jpeg(jpeg: bytes) -> Optional[str]:
+    """JPEG → (cv2|PIL) → pyzbar → 문자열"""
     try:
-        # 1. 검색 페이지 접근
-        url = f"https://www.yes24.com/Product/Search?domain=BOOK&query={isbn}"
-        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-        soup = BeautifulSoup(r.text, 'html.parser')
-
-        # 2. 검색 결과에서 도서 상세 링크 추출
-        prd_info = soup.find('a', class_='gd_name')
-        if not prd_info:
-            print("❌ 도서 링크를 찾을 수 없습니다.")
-            continue
-
-        url_detail = "https://www.yes24.com" + prd_info['href']
-        print("📘 상세 링크:", url_detail)
-
-        # 3. 상세 페이지 요청
-        r = requests.get(url_detail, headers={"User-Agent": "Mozilla/5.0"})
-        soup = BeautifulSoup(r.text, 'html.parser')
-
-        # 4. 제목
-        title_tag = soup.find("h2", class_="gd_name")
-        title = title_tag.get_text(strip=True) if title_tag else "제목 없음"
-
-        # 작가(저자) 이름 추출
-        author_tag = soup.select_one("span.gd_auth a")
-        author = author_tag.get_text(strip=True) if author_tag else "저자 없음"
-
-        date_tag = soup.select_one("span.gd_date")
-        pub_date = date_tag.get_text(strip=True) if date_tag else "출간일 없음"
-
-        def parse_korean_date(date_str: str) -> datetime.date:
-            match = re.search(r"(/d{4})년/s*(/d{1,2})월/s*(/d{1,2})일", date_str)
-            if match:
-                year, month, day = map(int, match.groups())
-                return datetime.date(year, month, day)
-            else:
+        if _HAS_CV2:
+            import numpy as np
+            buf = np.frombuffer(jpeg, dtype=np.uint8)
+            img = cv2.imdecode(buf, cv2.IMREAD_GRAYSCALE)
+            if img is None:
                 return None
-        
-        print("📘 상세 링크:", url_detail)
-        print("📗 제목:", title)
-        print("👤 저자:", author)
-        print("출판일 ",parse_korean_date(pub_date))
+            results = zbar_decode(img)
+        else:
+            img = Image.open(BytesIO(jpeg)).convert("L")
+            results = zbar_decode(img)
 
-        time.sleep(1)  # 서버 과부하 방지를 위한 쉬는 시간
+        if not results:
+            return None
+        data = results[0].data
+        try:
+            return data.decode("utf-8", errors="ignore")
+        except Exception:
+            return str(data)
+    except Exception:
+        return None
+
+async def lookup_item(barcode: str, db: Session) -> Optional[dict]:
+    """길이 13이면 ISBN, 아니면 item_id로 조회"""
+    try:
+        if len(barcode) == 13:
+            # ISBN → ItemCopy → Item
+            item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == barcode).first()
+            if item_copy:
+                    return {
+                        "identifier_code": item_copy.identifier_code,
+                    }
+        else:
+            item_copy = db.query(ItemCopy).filter(ItemCopy.identifier_code == barcode).first()
+            if item_copy:
+                    return {
+                        "identifier_code": item_copy.identifier_code,
+                    }
 
     except Exception as e:
-        print("❌ 오류 발생:", str(e))
+        print("lookup_item 에러:", e)
 
-'''
+    return None
 
-    # # 이미지 태그 선택
-    # img_tag = soup.find("img", class_="gImg")
+async def stop_streaming_and_notify():
+    """ESP32에 stop 보내고, 시청자에게 상태 뿌림"""
+    global esp32_ctrl_ws
+    if esp32_ctrl_ws:
+        try:
+            await esp32_ctrl_ws.send_text("stop")
+        except Exception:
+            pass
+    await broadcast_json_to_web({"type": "status", "from": "server", "value": "stop_sent"})
 
-    # # 이미지 다운로드
-    # if img_tag:
-    #     img_url = img_tag.get("src")
-    #     print("이미지 URL:", img_url)
+def reset_scan_state():
+    global barcode_found, scan_deadline, scanning
+    barcode_found = None
+    scan_deadline = 0.0
+    scanning = False
 
-    #     # 이미지 요청 및 저장
-    #     response = requests.get(img_url)
-    #     if response.status_code == 200:
-    #         with open("{0}.jpg".format(i), "wb") as f:
-    #             f.write(response.content)
-    #         print("이미지 다운로드 완료!")
-    #     else:
-    #         print("이미지 요청 실패:", response.status_code)
-    # else:
-    #     print("이미지를 찾을 수 없습니다.")
+# -------------------------
+# 0️⃣ FE ↔ BE: /ws/web
+# -------------------------
+@app.websocket("/ws/web")
+async def ws_web(websocket: WebSocket):
+    """FE 제어 채널: {type:'start'|'stop'} 전송, 결과/상태/인식 결과 수신"""
+    global started_waiter, scan_deadline
+    await websocket.accept()
+    web_clients.add(websocket)
 
-end = time.time()
-print(f"{end - start:.5f} sec")
-# for i in ('infoset_introduce', 'infoset_toc'):
-#     print(i + "/n")
-#     prd_detail = soup.find('div', attrs={'id':{i}})
-#     prd_tr_list = prd_detail.find_all('textarea')
-#     print(prd_tr_list,"/n/n")
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            try:
+                req = json.loads(raw)
+            except Exception:
+                # 잘못된 포맷 무시
+                continue
 
-# prd_detail = soup.find('div', attrs={'id':'infoset_specific'})
+            typ = req.get("type")
+            if typ == "start":
+                # 1) ESP32 연결 체크
+                if esp32_ctrl_ws is None:
+                    await send_json(websocket, {
+                        "status": "error", "code": 503, "message": "ESP32 not connected"
+                    })
+                    continue
 
-# prd_tr_list = prd_detail.find_all('tr')
+                # 2) started 대기자 준비 (3초 타임아웃)
+                async with LOCK:
+                    if started_waiter is None or started_waiter.done():
+                        started_waiter = asyncio.get_event_loop().create_future()
+                # 3) ESP32에 start 전송 (텍스트)
+                try:
+                    await esp32_ctrl_ws.send_text("start")
+                except Exception:
+                    await send_json(websocket, {
+                        "status": "error", "code": 503, "message": "ESP32 not connected"
+                    })
+                    continue
 
-# for tr in prd_tr_list:
-#     if tr.find('th').get_text() == "쪽수, 무게, 크기":
-#         print(tr.find('td').get_text().split()[0])
+                # 4) 3초 내 "started" 수신 대기
+                try:
+                    await asyncio.wait_for(started_waiter, timeout=3.0)
+                except asyncio.TimeoutError:
+                    await send_json(websocket, {
+                        "status": "error", "code": 504, "message": "ESP32 no response (timeout)"
+                    })
+                    # 안전하게 stop 시도
+                    await stop_streaming_and_notify()
+                    continue
 
+                # 5) 성공 응답
+                await send_json(websocket, {"status": "started"})
+                # 6) 스캔 윈도우(10초) 오픈
+                reset_scan_state()
+                scan_deadline = time.time() + 10.0
+                await broadcast_json_to_web({"type": "status", "from": "server", "value": "scan_window_open"})
 
-isbn_seen = set()
-isbn_unique = []
-isbn_duplicates = set()
+            elif typ == "stop":
+                await stop_streaming_and_notify()
+                reset_scan_state()
+                await send_json(websocket, {"status": "stopped"})
 
-with open("C:/Users/nhlk1/OneDrive/바탕 화면/isbn_list.txt", "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if not line:
-            continue
-        parts = line.split(",")
-        if len(parts) != 2:
-            continue  # 예외 처리
+            elif typ == "reset":
+                reset_scan_state()
+                await send_json(websocket, {"status": "ok", "message": "scan_state_reset"})
 
-        isbn = parts[1].strip()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        web_clients.discard(websocket)
 
-        if isbn in isbn_seen:
-            isbn_duplicates.add(isbn)
-        else:
-            isbn_seen.add(isbn)
-            isbn_unique.append(isbn)
+# -------------------------
+# 1️⃣ BE ↔ ESP32: /ws/esp32  (텍스트만: "ready"|"started"|"stopped")
+# -------------------------
+@app.websocket("/ws/esp32")
+async def ws_esp32_ctrl(websocket: WebSocket, client_id: str = "esp32_001"):
+    """ESP32 컨트롤 채널 (텍스트 'start'/'stop'만 사용)"""
+    global esp32_ctrl_ws, started_waiter
+    await websocket.accept()
+    esp32_ctrl_ws = websocket
+    await broadcast_json_to_web({"type": "status", "from": "esp32", "value": "connected"})
 
-# ✅ 결과 출력
-print("📚 총 ISBN 개수:", len(isbn_unique) + len(isbn_duplicates))
-print("✅ 고유한 ISBN 수:", len(isbn_unique))
-print("❗ 중복 ISBN 수:", len(isbn_duplicates))
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            # ESP32가 "started"/"stopped"/"ready" 등을 보내는 경우
+            val = msg.strip().lower()
+            await broadcast_json_to_web({"type": "status", "from": "esp32", "value": val})
 
-if isbn_duplicates:
-    print("/n📛 중복된 ISBN 목록:")
-    for d in isbn_duplicates:
-        print("-", d)
+            # "started"면 waiter 풀어주기
+            if val == "started":
+                async with LOCK:
+                    if started_waiter and not started_waiter.done():
+                        started_waiter.set_result(True)
 
+    except WebSocketDisconnect:
+        await broadcast_json_to_web({"type": "status", "from": "esp32", "value": "disconnected"})
+    finally:
+        esp32_ctrl_ws = None
 
+# -------------------------
+# 2️⃣ ESP32 → BE: /ws/esp32/video (바이너리 프레임)
+# -------------------------
+@app.websocket("/ws/esp32/video")
+async def ws_esp32_video(websocket: WebSocket, client_id: str = "esp32_001"):
+    """ESP32 비디오 채널(바이너리 JPEG), 약 33fps"""
+    global latest_frame, barcode_found, scan_deadline, scanning
+    await websocket.accept()
+    esp32_video_ws = websocket
+    await broadcast_json_to_web({"type": "status", "from": "esp32", "value": "video_connected"})
+
+    try:
+        while True:
+            msg = await websocket.receive()
+            if "bytes" in msg and msg["bytes"]:
+                latest_frame = msg["bytes"]
+                # 1) 프레임 브로드캐스트(원하면 안 써도 됨 — /ws/stream 구독자용)
+                await broadcast_frame(latest_frame)
+
+                # 2) 스캔 윈도우 열려 있으면 바코드 인식
+                if scan_deadline > 0 and time.time() <= scan_deadline and not barcode_found:
+                    if not scanning:
+                        scanning = True
+                        async def _scan_once(data: bytes):
+                            global barcode_found, scanning
+                            try:
+                                code = await asyncio.to_thread(decode_barcode_from_jpeg, data)
+                                if code:
+                                    barcode_found = code
+                                    # 결과 조회
+                                    item = await lookup_item(code)
+                                    if item:
+                                        # 성공 + 물품 존재 (200)
+                                        await broadcast_json_to_web({
+                                            "status": "recognized", "code": 200, **item
+                                        })
+                                    else:
+                                        # 성공 but 물품 없음 (404)
+                                        await broadcast_json_to_web({"status": "not_found", "code": 404})
+                                    # 어떤 경우든 stop 자동 전송
+                                    await stop_streaming_and_notify()
+                                    # 스캔 윈도우 종료
+                                    reset_scan_state()
+                            finally:
+                                scanning = False
+                        asyncio.create_task(_scan_once(latest_frame))
+                # 3) 타임아웃 처리
+                elif scan_deadline > 0 and time.time() > scan_deadline and not barcode_found:
+                    # 408 timeout
+                    await broadcast_json_to_web({"status": "timeout", "code": 408})
+                    await stop_streaming_and_notify()
+                    reset_scan_state()
+
+            # 텍스트는 상태용(선택)
+            elif "text" in msg and msg["text"]:
+                await broadcast_json_to_web({"type": "status", "from": "esp32", "value": msg["text"]})
+
+    except WebSocketDisconnect:
+        await broadcast_json_to_web({"type": "status", "from": "esp32", "value": "video_disconnected"})
+
+# -------------------------
+# 추가) 시청자: /ws/stream  (프레임만 받고 싶은 FE가 구독)
+# -------------------------
+@app.websocket("/ws/stream")
+async def ws_stream_view(websocket: WebSocket):
+    await websocket.accept()
+    viewers.add(websocket)
+    try:
+        while True:
+            await asyncio.sleep(60)
+    except WebSocketDisconnect:
+        viewers.discard(websocket)
+
+# -------------------------
+# 테스트용 간단 FE
+# -------------------------
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return

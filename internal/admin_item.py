@@ -132,7 +132,7 @@ async def add_items(isbn: str,db: Session = Depends(get_db)):
         item.total_count += 1
         item.available_count += 1
         item.update_date = datetime.utcnow()
-
+        isbn = isbn+"ABCD"
         # 3. 복사본 추가
         new_copy = ItemCopy(
             item_id=item.item_id,

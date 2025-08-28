@@ -23,7 +23,7 @@ def get_yes24_image_url_selenium(isbn):
     
     try:
         driver.get(search_url)
-        time.sleep(3)  # 페이지가 완전히 로드될 때까지 3초 대기
+        time.sleep(2)  # 페이지가 완전히 로드될 때까지 3초 대기
 
         # CSS 선택자를 사용해 이미지 요소 찾기
         # 'src' 속성을 가진 <img> 태그를 찾습니다.
@@ -40,17 +40,33 @@ def get_yes24_image_url_selenium(isbn):
 
     finally:
         driver.quit() # 드라이버 종료
-
+img_url =[]
 # 사용 예시
+isbn = ["9788963414485","9788968481475","9791165217303","9780137050512","9780470531082","9788971630662","9788996094050","9791169211475","9791185475028","9791161753096","9791165922238","9788960773424",
+        "9788960773417","9788960779471","9791161750316","9788960778580","9791197008467"]
+img_urls = [
+    "https://image.yes24.com/goods/125295944/L",
+    "https://image.yes24.com/goods/15651484/L",
+    "https://image.yes24.com/goods/104245816/L",
+    "https://image.yes24.com/goods/5177108/L",
+    "https://image.yes24.com/goods/3440583/L",
+    "https://image.yes24.com/goods/129272/L",
+    "https://image.yes24.com/goods/4333686/L",
+    "https://image.yes24.com/goods/122338517/L",
+    "https://image.yes24.com/goods/16854000/L",
+    "https://image.yes24.com/goods/74099632/L",
+    "https://image.yes24.com/goods/118929778/L",
+    "https://image.yes24.com/goods/7516872/L",
+    "https://image.yes24.com/goods/7516721/L",
+    "https://image.yes24.com/goods/34764614/L",
+    "https://image.yes24.com/goods/44150337/L",
+    "https://image.yes24.com/goods/26079920/L",
+    "https://image.yes24.com/goods/129124813/L"
+]
+qwer = []
+for k in range(len(isbn)) :
+    qwer.append([isbn[k],img_urls[k]])
 
-with open("C:/Users/nhlk1/Downloads/isbn_unique.txt", "r", encoding="utf-8") as ifile, \
-    open("isbn_img_url.txt", "w", encoding="utf-8") as ofile:
-
-    for line in ifile:
-        isbn = line.strip()
-        if isbn:
-            image_url = get_yes24_image_url_selenium(isbn)
-            ofile.write(f"{isbn},{image_url}\n")
-            print(f"{isbn} → {image_url}")
-    
-        print(f"ISBN {isbn}에 대한 YES24 이미지 URL: {image_url}")
+with open ("isbn_same.txt","w",encoding="utf-8") as file :
+    for url in qwer :
+        file.write(url[0]+","+url[1]+"\n")

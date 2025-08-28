@@ -18,7 +18,7 @@ router = APIRouter(prefix="/items", tags=["admin_items"])
 size=12
 
 @router.get("", response_model=CommonResponse[List[ListItemWithCopyData]])
-def get_admin_items(
+async def get_admin_items(
     token : int =Depends(get_admin_user),
     page: int = Query(1, ge=1),
     search_type: Optional[str] = Query(None, description="검색 기준 (copy_id, name, hashtag)"),
@@ -76,7 +76,7 @@ def get_admin_items(
     )
 
 @router.get("/{copy_id}", response_model=CommonResponse[ItemWithItemCopyData])
-def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
+async def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id).first()
     if not copy:
         return CommonResponse(success=False, code=404)
@@ -118,7 +118,7 @@ def get_item_copy(copy_id: int,token : int =Depends(get_admin_user),db: Session 
 
 #, token : str =Depends(get_admin_user)
 @router.post("/add",response_model= CommonResponse)
-def add_items(isbn: str,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
+async def add_items(isbn: str,token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
 
     # 1. 기존 item 조회
     item = db.query(Item).filter(

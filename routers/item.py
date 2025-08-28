@@ -16,7 +16,7 @@ size=12
 
 
 @router.get("/list", response_model=CommonResponse[list[ListItemWithCopyData]])
-def get_items(
+async def get_items(
     page: int = Query(1, ge=1),
     token: int =Depends(get_current_user),
     search_type: Optional[str] = Query(None, description="검색 기준 (item_id, name, hashtag)"),

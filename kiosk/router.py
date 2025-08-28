@@ -70,7 +70,7 @@ def logout():
 
 
 @router.post("/rent", response_model=CommonResponse)
-def rent_item(
+async def rent_item(
     isbn: str,
     student_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -110,7 +110,7 @@ def rent_item(
 
 
 @router.post("/return", response_model=CommonResponse)
-def return_item(
+async def return_item(
     isbn: str,
     student_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -152,7 +152,7 @@ def return_item(
     return CommonResponse(success=True,code=200)
 
 @router.get("/input",response_model=CommonResponse)
-def check_item(isbn: str,  db: Session = Depends(get_db)):
+async def check_item(isbn: str, student_id : str = Depends(get_current_user),db: Session = Depends(get_db)):
     item_copy_obj = db.query(ItemCopy).filter(ItemCopy.identifier_code == isbn).first()
     if not item_copy_obj:
         raise HTTPException(status_code=404, detail="해당 ISBN의 사본이 없습니다.")

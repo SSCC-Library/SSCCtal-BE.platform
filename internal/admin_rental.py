@@ -19,7 +19,7 @@ router = APIRouter(prefix="/rentals", tags=["admin_rentals"])
 
 size = 12
 @router.get("", response_model=CommonResponse[List[RentalWithUserData]])
-def get_admin_rentals(
+async def get_admin_rentals(
     token : int =Depends(get_admin_user),
     page: int = Query(1, ge=1, description="페이지 번호 (1부터 시작)"),
     search_type: Optional[str] = Query(None, description="검색 기준 rental_id,student_id, name ,item_borrow_date, item_return_date, rental_status"),
@@ -103,7 +103,7 @@ def get_admin_rentals(
 
 # rental 상세 정보 조회
 @router.get("/{rental_id}", response_model=CommonResponse[RentalBase])
-def get_rental_by_id(rental_id: int, token : int =Depends(get_admin_user), db: Session = Depends(get_db)):
+async def get_rental_by_id(rental_id: int, token : int =Depends(get_admin_user), db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     
     if not rental:
@@ -113,7 +113,7 @@ def get_rental_by_id(rental_id: int, token : int =Depends(get_admin_user), db: S
 
 # rental 기록 업데이트
 @router.post("/{rental_id}", response_model=CommonResponse)
-def update_rental_main_info(
+async def update_rental_main_info(
     rental_id: int,
     data: RentalMainInfo,
     token : int =Depends(get_admin_user),
@@ -134,7 +134,7 @@ def update_rental_main_info(
 
 # rental 상태 변경
 @router.post("/status/{rental_id}", response_model=CommonResponse)
-def rental_status_info(rental_id: int,
+async def rental_status_info(rental_id: int,
     rental_status: RentalStatusUpdate,
     token : int =Depends(get_admin_user),
     db: Session = Depends(get_db)

@@ -18,7 +18,7 @@ class RentalRequest(BaseModel) :
     copy_id : int
 
 @router.get("/user", response_model=RentalListResponse) #개인 구부jwt 로직 추가 필요
-def get_rentals(
+async def get_rentals(
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(10, ge=1, le=100, description="페이지당 개수"),
     rental_status: Optional[RentalStatusEnum] = Query(None),
@@ -62,7 +62,7 @@ def get_rentals(
 
 # 전체 대여 내역 조회 (필터 포함, 특정 사람 기준)
 @router.get("/{student_id}", response_model=List[RentalBase])
-def list_rentals(
+async def list_rentals(
     student_id: Optional[int] = None,
     status: Optional[RentalStatusEnum] = None,
     db: Session = Depends(get_db)
@@ -88,7 +88,7 @@ def list_rentals(
 
 #  단일 대여 조회
 @router.get("/v1/{rental_id}", response_model=RentalBase)
-def get_rental(rental_id: int, db: Session = Depends(get_db)):
+async def get_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     if not rental:
         raise HTTPException(status_code=404, detail="대여 기록이 없습니다.")
@@ -97,7 +97,7 @@ def get_rental(rental_id: int, db: Session = Depends(get_db)):
 
 #  대여 생성
 @router.post("/v1/add", response_model=RentalBase)
-def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
+async def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(
         ItemCopy.copy_id == data.copy_id,
         ItemCopy.delete_status == DeletionStatusEnum.ACTIVE
@@ -131,7 +131,7 @@ def create_rental(data: RentalRequest, db: Session = Depends(get_db)):
 
 #  대여 정보 수정 (간단한 필드만 예시로 수정)
 @router.post("/v1/{rental_id}/edit", response_model=RentalBase)
-def update_rental(rental_id: int, data: RentalBase, db: Session = Depends(get_db)):
+async def update_rental(rental_id: int, data: RentalBase, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(Rental.rental_id == rental_id).first()
     if not rental:
         raise HTTPException(status_code=404, detail="대여 기록이 없습니다.")
@@ -146,7 +146,7 @@ def update_rental(rental_id: int, data: RentalBase, db: Session = Depends(get_db
 
 # 대여 삭제 (soft delete)
 @router.post("/v1/{rental_id}")
-def delete_rental(rental_id: int, db: Session = Depends(get_db)):
+async def delete_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(
         Rental.rental_id == rental_id,
         Rental.delete_status == DeletionStatusEnum.ACTIVE
@@ -162,7 +162,7 @@ def delete_rental(rental_id: int, db: Session = Depends(get_db)):
 
 # 대여 반납 처리
 @router.post("/v1/{rental_id}/return", response_model=RentalUpdate)
-def return_rental(rental_id: int, db: Session = Depends(get_db)):
+async def return_rental(rental_id: int, db: Session = Depends(get_db)):
     rental = db.query(Rental).filter(
         Rental.rental_id == rental_id,
         Rental.delete_status == DeletionStatusEnum.ACTIVE

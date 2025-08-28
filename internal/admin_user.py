@@ -14,7 +14,7 @@ router = APIRouter(prefix="/users", tags=["admin_users"])
 size =12
 
 @router.get("", response_model=CommonResponse[List[UserMainInfo]])
-def get_admin_users(
+async def get_admin_users(
     page: int = Query(..., ge=1, description="페이지 번호 (1부터 시작)"),
     token : int =Depends(get_admin_user),
     search_type: Optional[str] = Query(None, description="검색 기준 (student_id 또는 name)"),
@@ -77,7 +77,7 @@ def get_admin_users(
 
 # 단일 유저 조회
 @router.get("/search/{student_id}",response_model=CommonResponse[UserBase])
-def search_users(
+async def search_users(
     student_id: Optional[int] = None,
     token : int =Depends(get_admin_user),
     name: Optional[str] = None,
@@ -129,7 +129,7 @@ def search_users(
 
 # 유저 생성 (테스트용)
 @router.post("/create", response_model=CommonResponse)
-def create_user(user_data: UserMainInfo, token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
+async def create_user(user_data: UserMainInfo, token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
         (User.email == user_data.email) | 
         (User.student_id == user_data.student_id) &
@@ -150,7 +150,7 @@ def create_user(user_data: UserMainInfo, token : int =Depends(get_admin_user),db
 
 # 유저 정보 업데이트  (기존 데이터를 보여줘야합니다)
 @router.post("/update/{student_id}",response_model=CommonResponse)
-def update_user(student_id: int, update_data: UserMainInfo, token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
+async def update_user(student_id: int, update_data: UserMainInfo, token : int =Depends(get_admin_user),db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.user_status != UserStatusEnum.DELETED
         ).first()
@@ -167,7 +167,7 @@ def update_user(student_id: int, update_data: UserMainInfo, token : int =Depends
 
 # 유저 삭제 (회원탈퇴 처리, 실제 삭제 x)
 @router.post("/delete/{student_id}",response_model=CommonResponse)
-def delete_user(student_id: int, db: Session = Depends(get_db)):
+async def delete_user(student_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.delete_status != UserStatusEnum.DELETED).first()
     
@@ -180,7 +180,7 @@ def delete_user(student_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/update123/{student_id}",response_model=CommonResponse)
-def update_user(student_id: int, update_data: UserMainInfo,db: Session = Depends(get_db)):
+async def update_user(student_id: int, update_data: UserMainInfo,db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.user_status != UserStatusEnum.DELETED
         ).first()

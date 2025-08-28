@@ -11,13 +11,13 @@ router = APIRouter(prefix="/copies", tags=["copies"])
 
 # 전체 복사본 조회
 @router.get("/v1", response_model=List[ItemCopyResponse])
-def get_copies(db: Session = Depends(get_db)):
+async def get_copies(db: Session = Depends(get_db)):
     copies= db.query(ItemCopy).filter(ItemCopy.delete_status!= DeletionStatusEnum.DELETED).all()
     return copies
 
 # 복사본 단일 조회
 @router.get("/v1/{copy_id}",response_model=ItemCopyResponse)
-def get_copy(copy_id: int, db: Session = Depends(get_db)):
+async def get_copy(copy_id: int, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id,ItemCopy.delete_status!= DeletionStatusEnum.DELETED).first()
     if not copy:
         raise HTTPException(status_code=404, detail="Copy not found")
@@ -25,7 +25,7 @@ def get_copy(copy_id: int, db: Session = Depends(get_db)):
 
 # 복사본 생성
 @router.post("/v1", response_model=ItemCopyCreate)
-def create_copy(data: ItemCopyCreate, db: Session = Depends(get_db)):
+async def create_copy(data: ItemCopyCreate, db: Session = Depends(get_db)):
     copy = ItemCopy(**data.model_dump())
     db.add(copy)
     db.commit()
@@ -34,7 +34,7 @@ def create_copy(data: ItemCopyCreate, db: Session = Depends(get_db)):
 
 # 복사본 상태 변경
 @router.patch("/v1/{copy_id}/status", response_model=dict)
-def update_copy_status(copy_id: int, data: ItemCopyUpdate, db: Session = Depends(get_db)):
+async def update_copy_status(copy_id: int, data: ItemCopyUpdate, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.copy_id == copy_id, ItemCopy.delete_status!= DeletionStatusEnum.DELETED).first()
     if not copy:
         raise HTTPException(status_code=404, detail="Copy not found")
@@ -44,7 +44,7 @@ def update_copy_status(copy_id: int, data: ItemCopyUpdate, db: Session = Depends
 
 # 복사본 삭제 (소프트 삭제)
 @router.post("/v1/{copy_id}", response_model=dict)
-def delete_copy(copy_id: int, db: Session = Depends(get_db)):
+async def delete_copy(copy_id: int, db: Session = Depends(get_db)):
     copy = db.query(ItemCopy).filter(ItemCopy.delete_status!= DeletionStatusEnum.DELETED).first()
     if not copy:
         raise HTTPException(status_code=404, detail="Copy not found")

@@ -167,7 +167,7 @@ async def update_user(student_id: int, update_data: UserMainInfo, token : int =D
 
 # 유저 삭제 (회원탈퇴 처리, 실제 삭제 x)
 @router.post("/delete/{student_id}",response_model=CommonResponse)
-async def delete_user(student_id: int, db: Session = Depends(get_db)):
+async def delete_user(student_id: int, token : str = Depends(get_admin_user),db: Session = Depends(get_db)):
     user = db.query(User).filter(User.student_id == student_id,
         User.delete_status != UserStatusEnum.DELETED).first()
     

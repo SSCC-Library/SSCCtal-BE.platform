@@ -88,6 +88,10 @@ async def rent_item(
     if not copy:
         return CommonResponse(success=False, code=404, message="대여 가능한 복사본이 없습니다.")
 
+
+    item = db.query(Item).filter(Item.item_id == copy.item_id).first()
+    item.available_count -=1
+    
     # 2. 대여 등록
     rental = Rental(
         student_id=student_id,

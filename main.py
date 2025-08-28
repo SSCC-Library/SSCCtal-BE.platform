@@ -10,7 +10,7 @@ from internal.admin_user import router as admin_user_router
 from internal.admin_item import router as admin_item_router
 from internal.admin_rental import router as admin_rental_router
 from kiosk.router import router as kiosk_router
-from internal import admin
+from kiosk.websocket import router as ws_router
 from database import engine, Base
 
 
@@ -26,7 +26,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 app.include_router(kiosk_router,prefix="/api/v1")
+app.include_router(ws_router,prefix="/api/v1")
 app.include_router(admin_auth_router,prefix="/api/v1")
 app.include_router(admin_item_router,prefix="/api/v1/admin")
 app.include_router(admin_user_router,prefix="/api/v1/admin")

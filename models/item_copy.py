@@ -31,7 +31,6 @@ class ItemCopy(Base):
     identifier_code = Column(
         String(100),
         nullable=False,
-        unique=True,
         comment="실물 식별 코드 (예: 바코드, RFID)"
     )
     copy_status = Column(

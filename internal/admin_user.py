@@ -129,7 +129,7 @@ async def search_users(
 
 # 유저 생성 (테스트용)
 @router.post("/create", response_model=CommonResponse)
-async def create_user(user_data: UserMainInfo, db: Session = Depends(get_db)):
+async def create_user(user_data: UserMainInfo, token : int =Depends(get_admin_user), db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(
         (User.email == user_data.email) | 
         (User.student_id == user_data.student_id) &

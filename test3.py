@@ -33,7 +33,7 @@ for idx, row in df.iterrows():
         "major": major,
         "major2": None,
         "minor": None,
-        "user_classification": "student"
+        "user_classification": "staff"
     }
 
     response = requests.post(

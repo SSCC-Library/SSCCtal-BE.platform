@@ -56,16 +56,16 @@ class User(Base):
         comment='성별 ("male", "female")'
     )
     major = Column(
-        String(10),
+        String(30),
         nullable=False,
         comment="주전공"
     )
     major2 = Column(
-        String(10),
+        String(30),
         comment="복수전공 (선택)"
     )
     minor = Column(
-        String(10),
+        String(30),
         comment="부전공 (선택)"
     )
     user_classification = Column(

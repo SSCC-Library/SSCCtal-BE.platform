@@ -26,7 +26,7 @@ async def get_items(
     offset = (page - 1) * size
 
     # JOIN: ItemCopy + Item
-    query = db.query(ItemCopy, Item).join(Item, Item.item_id == ItemCopy.item_id)
+    query = db.query(Item)
 
     # Filtering
     if search_type and search_text:
@@ -39,23 +39,16 @@ async def get_items(
         elif search_type == "hashtag":
             query = query.filter(Item.hashtag.ilike(keyword))  # keyword와 일치하는 부분 검색
 
-    count=query.count()  # 필터에 일치하는 전체 데이터 개수
-    rows = query.offset(offset).limit(size).all()
+    count = query.count()
+    items = query.offset(offset).limit(size).all()
 
-    if not rows:
+    if not items:
         return CommonResponse(
             success=False,
             code=404
         )
 
-    # 각 row는 (ItemCopy, Item) 튜플
-    data: List[ListItemWithCopyData] = [
-        ListItemWithCopyData(
-            item_copy=ItemCopyMainInfo.model_validate(copy),
-            item=AdminItemMainInfo.model_validate(item)
-        )
-        for copy, item in rows
-    ]
+    data = [AdminItemMainInfo.model_validate(item) for item in items]
 
     return CommonResponse(
         success=True,

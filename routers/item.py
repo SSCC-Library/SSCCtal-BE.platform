@@ -15,7 +15,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 size=12
 
 
-@router.get("/list", response_model=CommonResponse[list[ListItemWithCopyData]])
+@router.get("/list", response_model=CommonResponse[list[AdminItemMainInfo]])
 async def get_items(
     page: int = Query(1, ge=1),
     token: int =Depends(get_current_user),

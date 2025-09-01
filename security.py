@@ -1,5 +1,5 @@
 import os
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -39,8 +39,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> int:
             raise HTTPException(status_code=403, detail="권한이 없습니다.")
         
         return student_id
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="로그인 시간이 만료되었습니다. 재로그인해주세요.")
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="재로그인 해주세요")
 
 
 def get_admin_user(token: str = Depends(oauth2_scheme)) -> int:
@@ -57,8 +59,10 @@ def get_admin_user(token: str = Depends(oauth2_scheme)) -> int:
 
         return student_id
 
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="로그인 시간이 만료되었습니다. 재로그인해주세요.")
     except JWTError:
-        raise HTTPException(status_code=401, detail="토큰 디코딩 실패")
+        raise HTTPException(status_code=401, detail="재로그인 해주세요")
 
 
 FERNET_SECRET_KEY=os.environ.get("FERNET_SECRET_KEY")

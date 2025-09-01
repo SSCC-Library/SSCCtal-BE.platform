@@ -132,7 +132,7 @@ async def add_items(isbn: str,db: Session = Depends(get_db)):
         item.total_count += 1
         item.available_count += 1
         item.update_date = datetime.utcnow()
-        isbn = isbn+"ABCD"
+
         # 3. 복사본 추가
         new_copy = ItemCopy(
             item_id=item.item_id,
@@ -173,77 +173,6 @@ async def add_items(isbn: str,db: Session = Depends(get_db)):
         new_copy = ItemCopy(
             item_id=new_item.item_id,
             identifier_code=isbn,
-            copy_status=CopyStatusEnum.AVAILABLE,
-            create_date=datetime.utcnow(),
-            update_date=datetime.utcnow(),
-            delete_status=DeletionStatusEnum.ACTIVE
-        )
-        db.add(new_copy)
-        db.commit()
-    return CommonResponse(success=True, code=200)
-
-
-from pydantic import BaseModel
-class addItem(BaseModel) :
-    isbn : str
-    img_url :str
-
-
-@router.post("/add1",response_model= CommonResponse)
-async def add_items(data : addItem,db: Session = Depends(get_db)):
-
-    # 1. 기존 item 조회
-    item = db.query(Item).filter(
-        Item.identifier_code == data.isbn,
-        Item.delete_status != DeletionStatusEnum.DELETED
-    ).first()
-
-    if item:
-        # 2. 존재할 경우: 수량 +1 증가
-        item.total_count += 1
-        item.available_count += 1
-        item.update_date = datetime.utcnow()
-        
-        # 3. 복사본 추가
-        new_copy = ItemCopy(
-            item_id=item.item_id,
-            identifier_code=data.isbn,
-            copy_status=CopyStatusEnum.AVAILABLE,
-            create_date=datetime.utcnow(),
-            update_date=datetime.utcnow(),
-            delete_status=DeletionStatusEnum.ACTIVE
-        )
-        db.add(new_copy)
-        db.commit()
-        return CommonResponse(success=True, code=200)
-    else :
-    # 4. 존재하지 않을 경우: YES24에서 정보 가져오기
-        info = fetch_book_info(data.isbn)
-        if not info:
-            raise CommonResponse(success=False,code=404)
-
-        # 5. 새 item 추가
-        new_item = Item(
-            identifier_code=info['identifier_code'],
-            name=info['name'],
-            type=ItemTypeEnum.BOOK,
-            publisher=info['publisher'],
-            publish_date=info['publish_date'],
-            image_url=data.img_url,
-            total_count=1,
-            available_count=1,
-            create_date=datetime.utcnow(),
-            update_date=datetime.utcnow(),
-            delete_status=DeletionStatusEnum.ACTIVE
-        )
-        db.add(new_item)
-        db.commit()
-        db.refresh(new_item)
-
-        # 6. 복사본 추가
-        new_copy = ItemCopy(
-            item_id=new_item.item_id,
-            identifier_code=data.isbn,
             copy_status=CopyStatusEnum.AVAILABLE,
             create_date=datetime.utcnow(),
             update_date=datetime.utcnow(),

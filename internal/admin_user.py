@@ -101,24 +101,6 @@ async def search_users(
             code=404
         )
     decrypted_phone = decrypt_phone(user.phone_number)  #전화번호 복호화
-    '''
-    user_data = UserBase(
-        id=user.id,
-        student_id=user.student_id,
-        name=user.name,
-        email=user.email,
-        phone_number=decrypted_phone,
-        gender=user.gender,
-        major=user.major,
-        major2=user.major2,
-        minor=user.minor,
-        user_classification=user.user_classification,
-        join_date=user.join_date,
-        update_date=user.update_date,
-        user_status=user.user_status,
-        delete_status=user.delete_status
-    )
-    '''
     user_data = UserBase.model_validate(user)  #user 데이터(ORM 객체)를 pydantic 모델로 생성
     user_data.phone_number = decrypted_phone
     return CommonResponse(
@@ -175,22 +157,6 @@ async def delete_user(student_id: int, token : str = Depends(get_admin_user),db:
         return CommonResponse(success = False, code= 503)
     
     user.delete_status = DeletionStatusEnum.DELETED.value
-    db.commit()
-    db.refresh(user)
-    return CommonResponse(success = True, code= 200)
-
-
-@router.post("/update123/{student_id}",response_model=CommonResponse)
-async def update_user(student_id: int, update_data: UserMainInfo,db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.student_id == student_id,
-        User.user_status != UserStatusEnum.DELETED
-        ).first()
-    if not user:
-        return CommonResponse(success = False, code= 503)
-
-    for field, value in update_data.dict(exclude_unset=True).items():
-        setattr(user, field, value)
-    user.phone_number=encrypt_phone(user.phone_number)  #전화번호 해시
     db.commit()
     db.refresh(user)
     return CommonResponse(success = True, code= 200)

@@ -68,17 +68,6 @@ async def get_admin_rentals(
     results = []
     for rental in rentals:
         rental_data = RentalMainInfo.model_validate(rental)
-        '''
-        rental_data = RentalMainInfo(
-            rental_id=rental.rental_id,
-            student_id=rental.student_id,
-            rental_status=rental.rental_status,
-            item_borrow_date=rental.item_borrow_date,
-            expectation_return_date=rental.expectation_return_date,
-            item_return_date=rental.item_return_date,
-            overdue=rental.overdue
-        )
-        '''
 
         user_data = UserSimpleInfo(
             student_id=rental.user.student_id,
